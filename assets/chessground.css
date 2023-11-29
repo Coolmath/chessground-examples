@@ -162,3 +162,96 @@ cg-board piece.fading {
 .cg-wrap coords.ranks coord {
   transform: translateY(39%);
 }
+
+/* Unrelated to chessground; only for the examples page */
+body {
+  background-image: linear-gradient(to bottom, #2c2c2c, #1a1a1a 116px);
+  color: #b0b0b0;
+  font-family: "Helvetica Neue",Helvetica,Arial,sans-serif;
+  font-size: 11px;
+}
+#play-vs-ai {
+  margin: 30px 0 0 0;
+  display: flex;
+  flex-flow: row;
+}
+#play-vs-ai menu {
+  flex: 0 0 300px;
+  margin: 0 15px 0 0;
+}
+#play-vs-ai menu a {
+  display: block;
+  cursor: pointer;
+  padding: 5px 15px;
+}
+#play-vs-ai menu a:hover {
+  background: #333;
+}
+#play-vs-ai menu a.active {
+  border-left: 5px solid #b0b0b0;
+}
+#play-vs-ai section {
+  display: inline-block;
+  background: #404040;
+  padding: 10px 12px 10px 12px;
+  border-radius: 2px;
+}
+#play-vs-ai section p {
+  text-align: center;
+  margin: 20px 0 0 0;
+}
+#play-vs-ai control {
+  margin-left: 20px;
+}
+#play-vs-ai control .zoom {
+  margin-top: 1em;
+  display: block;
+}
+#play-vs-ai control .zoom input {
+  margin-left: 1em;
+  width: 4em;
+}
+
+/*
+ * Board
+ */
+.blue .cg-wrap {
+  background-image: url('images/board/8x8brown.svg');
+}
+
+.merida .cg-wrap piece.pawn.white {
+  background-image: url('images/pieces/merida/wP.svg');
+}
+.merida .cg-wrap piece.bishop.white {
+  background-image: url('images/pieces/merida/wB.svg');
+}
+.merida .cg-wrap piece.knight.white {
+  background-image: url('images/pieces/merida/wN.svg');
+}
+.merida .cg-wrap piece.rook.white {
+  background-image: url('images/pieces/merida/wR.svg');
+}
+.merida .cg-wrap piece.queen.white {
+  background-image: url('images/pieces/merida/wQ.svg');
+}
+.merida .cg-wrap piece.king.white {
+  background-image: url('images/pieces/merida/wK.svg');
+}
+.merida .cg-wrap piece.pawn.black {
+  background-image: url('images/pieces/merida/bP.svg');
+}
+.merida .cg-wrap piece.bishop.black {
+  background-image: url('images/pieces/merida/bB.svg');
+}
+.merida .cg-wrap piece.knight.black {
+  background-image: url('images/pieces/merida/bN.svg');
+}
+.merida .cg-wrap piece.rook.black {
+  background-image: url('images/pieces/merida/bR.svg');
+}
+.merida .cg-wrap piece.queen.black {
+  background-image: url('images/pieces/merida/bQ.svg');
+}
+.merida .cg-wrap piece.king.black {
+  background-image: url('images/pieces/merida/bK.svg');
+}
