@@ -196,7 +196,7 @@ function Search(finishMoveCallback, maxPly, finishPlyCallback) {
         if (rp_rand == 'y') {
             var moves = GenerateValidMoves();
             bestMove = moves[Math.floor(Math.random() * moves.length)];
-            console.log("*********** garbo random move", bestMove, moves);
+            // console.log("*********** garbo random move", bestMove, moves);
         }
         finishMoveCallback(bestMove, value, (new Date()).getTime() - g_startTime, i - 1);
     }
@@ -1286,7 +1286,7 @@ function MakeMove(move, promotionPiece) {
         captured = g_board[epcEnd];
         g_board[epcEnd] = pieceEmpty;
     }
-    g_moveUndoStack[g_moveCount] = new UndoHistory(g_enPassentSquare,g_castleRights,g_inCheck,g_baseEval,g_hashKeyLow,g_hashKeyHigh,g_move50,captured);
+    g_moveUndoStack[g_moveCount] = new UndoHistory(g_enPassentSquare,g_castleRights,g_inCheck,g_baseEval,g_hashKeyLow,g_hashKeyHigh,g_move50,captured,move);
     g_moveCount++;
     g_enPassentSquare = -1;
     if (flags) {
@@ -1334,7 +1334,7 @@ function MakeMove(move, promotionPiece) {
         g_pieceList[(capturedType << 4) | g_pieceIndex[lastPieceSquare]] = lastPieceSquare;
         g_pieceList[(capturedType << 4) | g_pieceCount[capturedType]] = 0;
         g_baseEval += materialTable[captured & 0x7];
-        g_baseEval += pieceSquareAdj[captured & 0x7][me ? flipTable[epcEnd] : epcEnd];
+        try{g_baseEval += pieceSquareAdj[captured & 0x7][me ? flipTable[epcEnd] : epcEnd];}catch(e){console.error(e)}
         g_hashKeyLow ^= g_zobristLow[epcEnd][capturedType];
         g_hashKeyHigh ^= g_zobristHigh[epcEnd][capturedType];
         g_move50 = 0;
@@ -1428,6 +1428,11 @@ function MakeMove(move, promotionPiece) {
     g_repMoveStack[g_moveCount - 1] = g_hashKeyLow;
     g_move50++;
     return true;
+}
+function UnmakeLastMove() {
+    if (g_moveUndoStack.length === 0) return;
+    // console.log("UnmakeLastMove: ", g_moveUndoStack[g_moveCount-1].move)
+    UnmakeMove(g_moveUndoStack[g_moveCount-1].move);
 }
 function UnmakeMove(move) {
     g_toMove = 8 - g_toMove;
@@ -1969,7 +1974,7 @@ function GeneratePawnMoves(moveStack, from) {
         }
     }
 }
-function UndoHistory(ep, castleRights, inCheck, baseEval, hashKeyLow, hashKeyHigh, move50, captured) {
+function UndoHistory(ep, castleRights, inCheck, baseEval, hashKeyLow, hashKeyHigh, move50, captured, move) {
     this.ep = ep;
     this.castleRights = castleRights;
     this.inCheck = inCheck;
@@ -1978,6 +1983,7 @@ function UndoHistory(ep, castleRights, inCheck, baseEval, hashKeyLow, hashKeyHig
     this.hashKeyHigh = hashKeyHigh;
     this.move50 = move50;
     this.captured = captured;
+    this.move = move;
 }
 var g_seeValues = [0, 1, 3, 3, 5, 9, 900, 0, 0, 1, 3, 3, 5, 9, 900, 0];
 function See(move) {

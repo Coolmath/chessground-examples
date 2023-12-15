@@ -2202,9 +2202,9 @@ var ChessgroundExamples = (function (exports) {
     };
 
     const Chess = function (fen) {
-      var board = new Array(128);
+      window.board = new Array(128);
       var kings = { w: EMPTY, b: EMPTY };
-      var turn = WHITE;
+      window.turn = WHITE;
       var castling = { w: 0, b: 0 };
       var ep_square = EMPTY;
       var half_moves = 0;
@@ -3782,10 +3782,10 @@ var ChessgroundExamples = (function (exports) {
           return pretty_move
         },
 
-        undo: function () {
+        undo: (window.undo = function () {
           var move = undo_move();
           return move ? make_pretty(move) : null
-        },
+        }),
 
         clear: function () {
           return clear()
@@ -4129,6 +4129,9 @@ var ChessgroundExamples = (function (exports) {
         const origPiece = state.pieces.get(orig), destPiece = state.pieces.get(dest);
         if (orig === dest || !origPiece)
             return false;
+
+        storeCurrentState();
+
         const captured = destPiece && destPiece.color !== origPiece.color ? destPiece : undefined;
         if (dest === state.selected)
             unselect(state);
@@ -4904,6 +4907,7 @@ var ChessgroundExamples = (function (exports) {
             toggleOrientation(state);
             redrawAll();
         }
+        window.toggleOrientation$1 = toggleOrientation$1;
         return {
             set(config) {
                 if (config.orientation && config.orientation !== state.orientation)
@@ -5403,8 +5407,8 @@ var ChessgroundExamples = (function (exports) {
       pawnPromotionUICanvas = document.createElement('canvas');
 
       pawnPromotionUICanvas.id = "pawnPromotionUI";
-      pawnPromotionUICanvas.width = 320;
-      pawnPromotionUICanvas.height = 320;
+      pawnPromotionUICanvas.width = 480;
+      pawnPromotionUICanvas.height = 480;
       pawnPromotionUICanvas.style.zIndex = -1;
       pawnPromotionUICanvas.style.position = "absolute";
 
@@ -5413,7 +5417,7 @@ var ChessgroundExamples = (function (exports) {
 
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.fillStyle = 'rgba(0,0,0,0.75)';
-      ctx.rect(0, 0, 320, 320);
+      ctx.rect(0, 0, 480, 480);
       ctx.fill();
 
       function createPiece(name, x, y) {
@@ -5421,18 +5425,18 @@ var ChessgroundExamples = (function (exports) {
         image.onload = function () {
           image['-x-'] = x;
           image['-y-'] = y;
-          image['-width-'] = image.naturalWidth * 0.4;
-          image['-height-'] = image.naturalHeight * 0.4;
+          image['-width-'] = image.naturalWidth;
+          image['-height-'] = image.naturalHeight;
 
-          ctx.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, image['-x-'], image['-y-'], image['-width-'], image['-height-']);
+          ctx.drawImage(image, image['-x-'], image['-y-'], image.naturalWidth, image.naturalHeight);
         }
         image.src = "assets/images/pieces/merida/" + name + ".svg";
         return image;
       }
-      const queen = createPiece('wQ', 15, 121);
-      const rock = createPiece('wR', 90, 121);
-      const bishop = createPiece('wB', 155, 121);
-      const knight = createPiece('wN', 230, 121);
+      const queen = createPiece('wQ', 55, 55);
+      const rock = createPiece('wR', 280, 55);
+      const bishop = createPiece('wB', 55, 250);
+      const knight = createPiece('wN', 280, 250);
 
       pawnPromotionUICanvas.addEventListener("click", function (event) {
         const x = event.offsetX;
@@ -5468,6 +5472,7 @@ var ChessgroundExamples = (function (exports) {
         onSelected(selectedPiece);
       }
     }
+    window.showPawnPromotionUI=showPawnPromotionUI;
     function hidePawnPromotionUI() {
       pawnPromotionUICanvas.style.zIndex = -1;
     }
@@ -5902,7 +5907,9 @@ var ChessgroundExamples = (function (exports) {
     }
 
     function redrawBoardForNewPromotiedPiece(dest, promotionPiece/* 'q','r','b','n' */) {
-      window.state.pieces.get(dest).role = ({
+      let piece = window.state.pieces.get(dest);
+      piece.roleBeforePromotion = piece.role;
+      piece.role = ({
         'q':"queen",
         'r':"rook",
         'b':"bishop",
@@ -5911,6 +5918,264 @@ var ChessgroundExamples = (function (exports) {
 
       window.redrawAll();
     }
+
+    function cloneMap(map) {
+      let newMap = new Map();
+      for (let [key, value] of map) {
+        newMap.set(key, JSON.parse(JSON.stringify(value)));
+      }
+      return newMap;
+    }
+
+    window['-sotredStates-'] = [];
+    window.cloneCurrentState = function() {
+      const state = window['-state-'];
+      const storedState = {
+        lastMove: state.lastMove ? state.lastMove.slice() : state.lastMove,
+        movable: {
+          color: state.movable.color,
+          dests: state.movable.dests ? cloneMap(state.movable.dests) : state.movable.dests
+        },
+        orientation: state.orientation,
+        pieceKey: state.pieceKey,
+        pieces: cloneMap(state.pieces),
+        premovable: JSON.parse(JSON.stringify(state.premovable)),
+        turnColor: state.turnColor,
+        viewOnly: state.viewOnly
+      };
+      
+      // restore previous role for the promoted pieces (basucally useful only for proper rendering as the logis restores by other code)
+      for (let value of storedState.pieces.values()) {
+        if (value.roleBeforePromotion) {
+          value.role = value.roleBeforePromotion;
+          delete value.roleBeforePromotion;
+        }
+      }
+      for (let value of state.pieces.values()) {
+        if (value.roleBeforePromotion) {
+          delete value.roleBeforePromotion;
+        }
+      }
+
+      return storedState;
+    };
+    window.storeCurrentState = function() {
+      const state = cloneCurrentState();
+      window['-sotredStates-'].push(state);
+
+      window.currentRenderedStateIndex = window['-sotredStates-'].length;
+    };
+
+    window.actualStoredState = null;
+    window.storeActualState = function() {
+      window.actualStoredState = cloneCurrentState();      
+    };
+    window.revertActualState = function() {
+      window.currentRenderedStateIndex = window['-sotredStates-'].length;
+
+      if (window.actualStoredState) {
+        renderStoryState(window.actualStoredState, true);
+      }
+    };
+
+    window.undoLastStoredState = function() {
+      if (window['-sotredStates-'].length === 0) return;
+      if (window.currentRenderedStateIndex != window['-sotredStates-'].length) return;
+      let lastState = window['-sotredStates-'].pop();
+      window.currentRenderedStateIndex = window['-sotredStates-'].length;
+      
+      const state = window.state;
+      state.lastMove = lastState.lastMove;
+      state.movable.color = lastState.movable.color;
+      state.movable.dests = lastState.movable.dests;
+      state.orientation = lastState.orientation;
+      state.pieceKey = lastState.pieceKey;
+      state.pieces = lastState.pieces;
+      state.premovable = lastState.premovable;
+      state.turnColor = lastState.turnColor;
+
+      state.selectable = {enabled: true};
+      delete state.selected;
+
+      state.viewOnly = lastState.viewOnly;
+
+      window.undo();
+
+      UnmakeLastMove();
+
+      redrawAll();
+
+      storeActualState();
+      window.actualStoredState.san = lastState.san;
+
+      window.renderStoryStatesList();
+      window.updateStoryButtonStates();
+    };
+
+    window.renderStoryState = function(_state, isActual) {  
+      if (isActual === undefined) isActual = false;
+
+      const state = window.state;
+      state.lastMove = _state.lastMove;
+      state.movable.color = _state.movable.color;
+      state.movable.dests = _state.movable.dests;
+      state.orientation = _state.orientation;
+      state.pieceKey = _state.pieceKey;
+      state.pieces = _state.pieces;
+      state.premovable = _state.premovable;
+      state.turnColor = _state.turnColor;
+
+      state.selectable = {enabled: isActual};
+      state.viewOnly = !isActual;
+      
+      redrawAll();
+
+      window.renderStoryStatesList();
+      window.updateStoryButtonStates();
+    };
+
+    window.updateStoryButtonStates = function() {
+      function setEnabled(button, glowed) {
+        if (button.classList.contains("disabled")) {
+          button.classList.remove("button", "disabled");
+        }
+        if (glowed) {
+          button.classList.add("button", "glowed");
+        } else {
+          button.classList.add("button");
+        }
+        
+        button.style.pointerEvents = '';
+      }
+      function setDisabled(button, glowed) {
+        if (glowed) {
+          if (button.classList.contains("glowed")) {
+            button.classList.remove("button", "glowed");
+          }
+        } else {
+          if (button.classList.contains("button")) {
+            button.classList.remove("button");
+          }  
+        }
+        
+        button.classList.add("button", "disabled");
+
+        button.style.pointerEvents = 'none';
+      }
+      
+      setEnabled(buttonFirstStoryState);
+      setEnabled(buttonPrevStoryState);
+      setEnabled(buttonNextStoryState);
+      setEnabled(buttonActualStoryState, true);
+
+      if (window.currentRenderedStateIndex <= 0) {
+        setDisabled(buttonFirstStoryState);
+        setDisabled(buttonPrevStoryState);
+      }
+      if (window.currentRenderedStateIndex >= window['-sotredStates-'].length) {
+        setDisabled(buttonNextStoryState);
+        setDisabled(buttonActualStoryState, true);
+      }
+      
+      if (window.currentRenderedStateIndex == window['-sotredStates-'].length && window.currentRenderedStateIndex > 0) {
+        setEnabled(buttonTakeback);  
+      } else {
+        setDisabled(buttonTakeback);
+      }
+    };
+
+    window.currentRenderedStateIndex = 0;
+    window.renderCurrentStoryState = function() {
+      let state = window['-sotredStates-'][window.currentRenderedStateIndex];
+      window.renderStoryState(state);
+    };
+    window.firstStoryState = function() {
+      if (window['-sotredStates-'].length === 0) return;
+      window.currentRenderedStateIndex = 0;
+
+      renderCurrentStoryState();
+    };
+    window.prevStoryState = function() {
+      if (window['-sotredStates-'].length === 0) return;
+      if (window.currentRenderedStateIndex <= 0) return;
+      
+      window.currentRenderedStateIndex--;
+
+      renderCurrentStoryState();
+    };
+    window.nextStoryState = function() {
+      if (window['-sotredStates-'].length === 0) return;
+      if (window.currentRenderedStateIndex >= window['-sotredStates-'].length) return;
+
+      window.currentRenderedStateIndex++;
+
+      if (window.currentRenderedStateIndex == window['-sotredStates-'].length) {
+        revertActualState();
+      } else {
+        renderCurrentStoryState();
+      }
+    };
+    window.showStoryStateByIndex = function(index) {
+      if (index == window['-sotredStates-'].length) {
+        window.revertActualState();
+      } else {
+        window.currentRenderedStateIndex = index;
+        renderCurrentStoryState();
+      }
+    };
+
+    window.generateMoveInnerHTML = function(index, san) {
+      return `
+        <move ` + (index == window.currentRenderedStateIndex ? `class="active"` : ``) + `onclick="(function(){
+            window.showStoryStateByIndex(${index});
+          })();">
+          ${san}
+        </move>
+      `;
+    };
+
+    window.renderStoryStatesList = function() {
+      const movesDiv = document.getElementsByClassName('moves')[0];
+      const sotredStates = window['-sotredStates-'].slice();
+      sotredStates.push(window.actualStoredState);
+      let innerHTML = ``;
+      for (let i = 1; i < sotredStates.length; i++) {        
+        let index = Math.floor(i / 2) + 1;
+        if (i % 2 == 1) {
+          innerHTML += `
+          <turn>
+            <index>${index}</index>
+            ${window.generateMoveInnerHTML(i, sotredStates[i].san)}
+        `;
+        } else {
+          innerHTML += `
+            ${window.generateMoveInnerHTML(i, sotredStates[i].san)}
+          </turn>
+        `;
+        }
+      }
+
+      if (sotredStates.length > 0 && sotredStates.length % 2 == 0) {
+        innerHTML += `
+            <move></move>
+          </turn>
+        `;
+      }
+
+      movesDiv.innerHTML = innerHTML;
+    };
+
+    window.previouslyStoredSan = null;
+    function storeSan(san) {
+      if (window.previouslyStoredSan) window['-sotredStates-'][window['-sotredStates-'].length - 1].san = window.previouslyStoredSan;
+
+      window.actualStoredState.san = san;
+
+      window.previouslyStoredSan = san;
+
+      window.renderStoryStatesList();
+      window.updateStoryButtonStates();
+    };
 
     function aiPlay(cg, chess, delay, firstMove) {
         return (orig, dest) => {
@@ -5927,9 +6192,29 @@ var ChessgroundExamples = (function (exports) {
               if (promotionPiece) {
                 redrawBoardForNewPromotiedPiece(dest, promotionPiece);
               }
+              
+              
+              //for history loging
+              let __move;
+              (function(){
+                let __moves = chess.moves({ verbose: true });
+                __moves = __moves.filter(m => m.from == orig && m.to == dest);
+                if (promotionPiece) {
+                  __move = __moves.find(m => m.promotion == promotionPiece);
+                } else {
+                  __move = __moves[0];
+                }
+                if (!__move) __move = firstMove ? __moves[0] : __moves[Math.floor(Math.random() * __moves.length)];
+                // console.log('SAN PLAYER: ', __move.san);
+              })();
 
               chess.move(_move);
+              window.storeActualState();
 
+              //prevent player interaction while AI is 'thinking'
+              window.state.viewOnly = true;
+
+              storeSan(__move.san);
 
               MOVES_NUM++;
 
@@ -5944,6 +6229,8 @@ var ChessgroundExamples = (function (exports) {
                       move = moves[i];
                   }
               }
+              
+              // console.log('MakeMove Player: ', move)
               MakeMove(move, promotionPiece);
 
               const t0 = Date.now();
@@ -5994,7 +6281,7 @@ var ChessgroundExamples = (function (exports) {
                 if (bestMove != null) {
                     // const pvMessage = BuildPVMessage(bestMove, value, timeTaken, ply);
                     // console.log(pvMessage);
-
+                    // console.log('MakeMove AI: ', bestMove)
                     MakeMove(bestMove);
 
                     var aiFromX = (bestMove & 0xF) - 4;
@@ -6042,7 +6329,9 @@ var ChessgroundExamples = (function (exports) {
                           move = moves[0];
                         }
                         if (!move) move = firstMove ? moves[0] : moves[Math.floor(Math.random() * moves.length)];
-                        chess.move(move.san);
+
+                        chess.move(move.san);//san is the move to be rendered in the log
+                        // console.log('SAN AI: ', move.san)
                         cg.move(move.from, move.to);
                         var turnColor = toColor(chess);
                         var color = toColor(chess);
@@ -6058,6 +6347,12 @@ var ChessgroundExamples = (function (exports) {
 
                         if (_promotionPieceAI) redrawBoardForNewPromotiedPiece(posTo, _promotionPieceAI);
 
+                        window.storeActualState();
+
+                        storeSan(move.san);
+
+                        //allow player to interact
+                        window.state.viewOnly = false;
 
                         setTimeout(()=>{
                           let availableMoves = chess.moves({ verbose: true });
@@ -6176,3 +6471,68 @@ var ChessgroundExamples = (function (exports) {
     return exports;
 
 })({});
+
+function removeAllTheUnneededUI() {  
+  var div_play_vs_ai = document.getElementById('play-vs-ai');
+  var lichess_ground = document.getElementsByClassName('lichess_ground')[0]
+  div_play_vs_ai.appendChild(lichess_ground);
+
+  var div_backandrematch = document.getElementById('backandrematch');
+  div_backandrematch.parentElement.removeChild(div_backandrematch);
+
+  var div_moves = document.getElementsByClassName('moves')[0];
+  div_moves.style.height='380px';
+
+  const elementClassesToBeRemoved = ['content is2d', 'clock', 'resign-confirm', 'moretime hint--bottom-left', 'clock_bottom', 'username', 'cemetery'];
+  for (let c of elementClassesToBeRemoved) {
+    var el = document.getElementsByClassName(c)[0];
+    el.parentElement.removeChild(el);
+  }
+}
+
+//UI
+window.addEventListener('load', function() {
+  removeAllTheUnneededUI();
+
+  window.buttonTakeback = document.getElementsByClassName('button hint--bottom takeback-yes')[0];
+  buttonTakeback.onclick = function() {
+    const sotredStates = window['-sotredStates-'];
+    if (sotredStates.length === 0) return;
+    
+    let lastState = sotredStates[sotredStates.length - 1];
+    if (lastState.turnColor === "black") {
+      window.undoLastStoredState();      
+      window.undoLastStoredState();
+    }
+  };
+
+  window.buttonFlip = document.getElementsByClassName('button flip hint--top')[0];
+  buttonFlip.onclick = function() {
+    window.toggleOrientation$1()
+  };
+
+  window.buttonNextStoryState = document.querySelectorAll('[data-icon="X"]')[0];
+  buttonNextStoryState.onclick = function() {
+    window.nextStoryState();
+  };
+
+  window.buttonPrevStoryState = document.querySelectorAll('[data-icon="Y"]')[0];
+  buttonPrevStoryState.onclick = function() {
+    window.prevStoryState();
+  };
+
+  window.buttonFirstStoryState = document.querySelectorAll('[data-icon="W"]')[0];
+  buttonFirstStoryState.onclick = function() {
+    window.firstStoryState();
+  };
+
+  window.buttonActualStoryState = document.querySelectorAll('[data-icon="V"]')[0];
+  buttonActualStoryState.onclick = function() {
+    window.revertActualState();
+  };
+
+  //clear the story list
+  window.renderStoryStatesList();
+  //disable the story nav buttons  
+  window.updateStoryButtonStates();
+});
