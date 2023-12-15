@@ -4964,18 +4964,6 @@ module.exports = {
 
     if (game.isPlayerPlaying(d) && game.nbMoves(d, d.player.color) === 0) $.sound.genericNotify();
 
-    if (game.isPlayerPlaying(d)) {
-      window.addEventListener('beforeunload', function(e) {
-        if (!lichess.hasToReload && !ctrl.data.blind && game.playable(ctrl.data) && ctrl.data.clock) {
-          document.body.classList.remove('fpmenu');
-          ctrl.socket.send('bye');
-          var msg = 'There is a game in progress!';
-          (e || window.event).returnValue = msg;
-          return msg;
-        }
-      });
-    }
-
     keyboard.init(ctrl);
 
     if (!ctrl.data.player.spectator && ctrl.vm.ply !== round.lastPly(ctrl.data))
