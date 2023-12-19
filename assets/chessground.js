@@ -5425,10 +5425,10 @@ var ChessgroundExamples = (function (exports) {
         image.onload = function () {
           image['-x-'] = x;
           image['-y-'] = y;
-          image['-width-'] = image.naturalWidth;
-          image['-height-'] = image.naturalHeight;
+          image['-width-'] = image.naturalWidth == 0 ? 150 : image.naturalWidth;
+          image['-height-'] = image.naturalHeight == 0 ? 150 : image.naturalHeight;
 
-          ctx.drawImage(image, image['-x-'], image['-y-'], image.naturalWidth, image.naturalHeight);
+          ctx.drawImage(image, image['-x-'], image['-y-'], image['-width-'], image['-height-']);
         }
         image.src = "assets/images/pieces/merida/" + name + ".svg";
         return image;
