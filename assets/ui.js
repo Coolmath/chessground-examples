@@ -4047,12 +4047,6 @@ module.exports = function(data, onFlag, soundColor) {
     m.endComputation();
   }.bind(this);
 
-  this.tick = function(color) {
-    data[color] = Math.max(0, lastUpdate[color] - (new Date() - lastUpdate.at) / 1000);
-    if (data[color] === 0) onFlag();
-    m.redraw();
-  }.bind(this);
-
   this.secondsOf = function(color) {
     return data[color];
   };
@@ -4133,13 +4127,6 @@ module.exports = function(data, onFlag) {
     this.data.white = white;
     this.data.black = black;
     setLastUpdate();
-  }.bind(this);
-
-  this.tick = function(color) {
-    m.startComputation();
-    this.data[color] = Math.max(0, lastUpdate[color] - (new Date() - lastUpdate.at) / 1000);
-    if (this.data[color] === 0) onFlag();
-    m.endComputation();
   }.bind(this);
 }
 
@@ -4606,7 +4593,6 @@ module.exports = function(opts) {
     this.setTitle();
     if (this.data.blind) blind.reload(this);
     this.moveOn.next();
-    setQuietMode();
     m.endComputation();
     this.vm.autoScroll && this.vm.autoScroll.now();
     onChange();
@@ -4622,44 +4608,6 @@ module.exports = function(opts) {
       $.modal(data.error);
     }.bind(this));
   }.bind(this);
-
-  this.clock = this.data.clock ? new clockCtrl(
-    this.data.clock,
-    this.socket.outoftime, (this.data.simul || this.data.player.spectator || !this.data.pref.clockSound) ? null : this.data.player.color
-  ) : false;
-
-  this.isClockRunning = function() {
-    return this.data.clock && game.playable(this.data) &&
-      ((this.data.game.turns - this.data.game.startedAtTurn) > 1 || this.data.clock.running);
-  }.bind(this);
-
-  var clockTick = function() {
-    if (this.isClockRunning()) this.clock.tick(this.data.game.player);
-  }.bind(this);
-
-  var makeCorrespondenceClock = function() {
-    if (this.data.correspondence && !this.correspondenceClock)
-      this.correspondenceClock = new correspondenceClockCtrl(
-        this.data.correspondence,
-        partial(this.socket.send, 'outoftime')
-      );
-  }.bind(this);
-  makeCorrespondenceClock();
-
-  var correspondenceClockTick = function() {
-    if (this.correspondenceClock && game.playable(this.data))
-      this.correspondenceClock.tick(this.data.game.player);
-  }.bind(this);
-
-  if (this.clock) setInterval(clockTick, 100);
-  else setInterval(correspondenceClockTick, 1000);
-
-  var setQuietMode = function() {
-    lichess.quietMode = game.isPlayerPlaying(this.data);
-    document.body.classList.toggle('no-select',
-      lichess.quietMode && this.clock && this.clock.secondsOf(this.data.player.color) <= 300);
-  }.bind(this);
-  setQuietMode();
 
   this.takebackYes = function() {
     this.socket.sendLoading('takeback-yes');
@@ -5236,9 +5184,6 @@ module.exports = function(send, ctrl) {
     },
     redirect: function() {
       ctrl.setRedirecting();
-    },
-    clock: function(o) {
-      if (ctrl.clock) ctrl.clock.update(o.white, o.black);
     },
     crowd: function(o) {
       ['white', 'black'].forEach(function(c) {
@@ -6207,35 +6152,6 @@ function tourRank(ctrl, color, position) {
   }, '#' + d.tournament.ranks[color]);
 }
 
-function renderClock(ctrl, color, position) {
-  var time = ctrl.clock.data[color];
-  var running = ctrl.isClockRunning() && ctrl.data.game.player === color;
-  return [
-    m('div', {
-      class: 'clock clock_' + color + ' clock_' + position + ' ' + classSet({
-        'outoftime': !time,
-        'running': running,
-        'emerg': time < ctrl.clock.data.emerg,
-        'turning': ctrl.data.game.player === color
-      })
-    }, [
-      clockView.showBar(ctrl.clock, time, ctrl.vm.goneBerserk[color]),
-      m('div.time', m.trust(clockView.formatClockTime(ctrl.clock, time * 1000, running))),
-      renderBerserk(ctrl, color, position),
-        m('div.whos_turn',
-            ctrl.data.game.player === color ? (
-                ctrl.data.player.spectator ? ctrl.trans(ctrl.data.game.player + 'Plays') : ctrl.trans(
-                    ctrl.data.game.player === ctrl.data.player.color ? 'yourTurn' : 'waitingForOpponent'
-                )
-            ) : ''
-        ),
-      ctrl.data.player.color === color ? goBerserk(ctrl) : null
-    ]),
-    position === 'bottom' ? button.moretime(ctrl) : null,
-    tourRank(ctrl, color, position)
-  ];
-}
-
 function showBerserk(ctrl, color) {
   return ctrl.vm.goneBerserk[color] &&
     ctrl.data.game.turns <= 1 &&
@@ -6249,19 +6165,9 @@ function renderBerserk(ctrl, color, position) {
   });
 }
 
-function anyClock(ctrl, color, position) {
-  if (ctrl.clock && !ctrl.data.blind) return renderClock(ctrl, color, position);
-  else if (ctrl.data.correspondence && ctrl.data.game.turns > 1)
-    return renderCorrespondenceClock(
-      ctrl.correspondenceClock, ctrl.trans, color, position, ctrl.data.game.player
-    );
-  else return whosTurn(ctrl, color, position);
-}
-
 module.exports = function(ctrl) {
   var showCorrespondenceClock = ctrl.data.correspondence && ctrl.data.game.turns > 1;
   return m('div.table_wrap', [
-    anyClock(ctrl, ctrl.data.opponent.color, 'top'),
     m('div', {
       class: 'table' + (status.finished(ctrl.data) ? ' finished' : '')
     }, [
@@ -6274,8 +6180,7 @@ module.exports = function(ctrl) {
       backtoHome(ctrl),
       clickEvent(ctrl),
       (typeof addevent === "function")?addevent(ctrl,require):''
-    ]),
-    anyClock(ctrl, ctrl.data.player.color, 'bottom'),
+    ])
   ]);
 }
 

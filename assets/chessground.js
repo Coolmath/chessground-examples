@@ -6486,7 +6486,7 @@ function removeAllTheUnneededUI() {
   const elementClassesToBeRemoved = ['content is2d', 'clock', 'resign-confirm', 'moretime hint--bottom-left', 'clock_bottom', 'username', 'cemetery'];
   for (let c of elementClassesToBeRemoved) {
     var el = document.getElementsByClassName(c)[0];
-    el.parentElement.removeChild(el);
+    if (el && el.parentElement) el.parentElement.removeChild(el);
   }
 }
 
