@@ -1,3 +1,12 @@
+let AI_LEVEL = 1;
+/**
+ * Sets the AI difficulty level
+ * @param {number} aiLevel - may be an integer from 1 to 9 (including both)
+ */
+function setAILevel(aiLevel) {
+  AI_LEVEL = aiLevel;
+}
+
 var getUrlParameter = function getUrlParameter(sParam) {
   var sPageURL = window.location.search.substring(1),
       sURLVariables = sPageURL.split('&'),
@@ -5476,6 +5485,41 @@ var ChessgroundExamples = (function (exports) {
     function hidePawnPromotionUI() {
       pawnPromotionUICanvas.style.zIndex = -1;
     }
+    function showWinnerMessage(youWin) {
+      pawnPromotionUICanvas.style.zIndex = 99;
+
+      const message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
+      const size = youWin ? 60 : 40;
+      const x = youWin ? 101 : 62;
+
+      const ctx = pawnPromotionUICanvas.getContext("2d");
+      ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
+
+      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.rect(0, 0, 480, 480);
+      ctx.fill();
+
+      ctx.font = size + "px Arial";
+
+      ctx.fillStyle = "#B58863";
+      ctx.fillText(message, x, 255);
+      ctx.strokeStyle = "#F0D9B5";
+      ctx.strokeText(message, x, 255);
+
+      //let's also show default UI
+      showCheckmateLabel(state.turnColor === 'black');
+
+      createRematchButton();
+    }
+    window.showWinnerMessage = showWinnerMessage;
+    function hideWinnerMessage() {
+      pawnPromotionUICanvas.style.zIndex = -1;
+      const ctx = pawnPromotionUICanvas.getContext("2d");
+      ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
+
+      hideCheckmateLabel();
+    }
+    window.hideWinnerMessage = hideWinnerMessage;
     function renderCoords(elems, className) {
         const el = createEl('coords', className);
         let f;
@@ -6077,10 +6121,13 @@ var ChessgroundExamples = (function (exports) {
         setDisabled(buttonActualStoryState, true);
       }
       
+      var butonRematch = document.getElementById("buton-rematch");
       if (window.currentRenderedStateIndex == window['-sotredStates-'].length && window.currentRenderedStateIndex > 0) {
-        setEnabled(buttonTakeback);  
+        setEnabled(buttonTakeback);
+        if (butonRematch) setEnabled(butonRematch);
       } else {
         setDisabled(buttonTakeback);
+        if (butonRematch) setDisabled(butonRematch);
       }
     };
 
@@ -6238,7 +6285,7 @@ var ChessgroundExamples = (function (exports) {
               const animDurationRequresWaiting = 250;
               const minTimeout = Math.max(delay - animDurationRequresWaiting, 0);
 
-              let parsedAiLevel = parseInt(getUrlParameter('AI_LEVEL'));
+              let parsedAiLevel = AI_LEVEL ?? parseInt(getUrlParameter('AI_LEVEL'));
               let aiLevel = isNaN(parsedAiLevel) ? 1 : parsedAiLevel;
               // console.log("AI LEVEL: ", aiLevel);
               let maxPly = 1
@@ -6356,11 +6403,11 @@ var ChessgroundExamples = (function (exports) {
 
                         setTimeout(()=>{
                           let availableMoves = chess.moves({ verbose: true });
-                          if (availableMoves.length === 0) alert("AI: Checkmate!");
+                          if (availableMoves.length === 0) showWinnerMessage(false);
                         }, 500);
                     }, remainingDelay);
                 } else {
-                    alert("You: Checkmate!");
+                  showWinnerMessage(true);
                 }
               };
 
@@ -6369,7 +6416,7 @@ var ChessgroundExamples = (function (exports) {
 
                 let aiAvailableMoves = chess.moves({ verbose: true });
                 if (aiAvailableMoves.length === 0) {
-                  alert("You: Checkmate!");
+                  showWinnerMessage(true);
                 } else {
                   SetupRnd(randYN, timeout);
                   Search(onSearchCompleted, maxPly, null);
@@ -6472,22 +6519,85 @@ var ChessgroundExamples = (function (exports) {
 
 })({});
 
+function createElementByOutherHTML( str ) {
+  var elem = document.createElement('div');
+  elem.innerHTML = str;
+  return elem;
+}
+
+function showCheckmateLabel(whiteWins) {
+  var p = createElementByOutherHTML('<p class="status ' + (whiteWins ? 'white' : 'black') + '"></p>');
+  var r = document.getElementsByClassName('replay')[0];
+  var bb = document.getElementsByClassName('board-buttons')[0];
+  r.insertBefore(p, bb);
+}
+
+function hideCheckmateLabel() {
+  var p = document.getElementsByClassName("status")[0]
+  if (p.parentElement) p.parentElement.removeChild(p);
+}
+
+function createRematchButton() {
+  const e = createElementByOutherHTML('<div class="follow_up"><a class="button" id="buton-rematch">Rematch</a><a class="button"></a></div>');
+  const cb = document.getElementsByClassName('control buttons')[0];
+  cb.appendChild(e);
+
+  let br = document.getElementById("buton-rematch");
+  br.addEventListener("click", function (event) {
+    if (br.parentElement) br.parentElement.removeChild(br);
+
+    hideWinnerMessage();
+
+    while (window['-sotredStates-'].length > 0) {
+      window.undoLastStoredState();      
+      window.undoLastStoredState();
+    }
+  });
+}
+
 function removeAllTheUnneededUI() {  
   var div_play_vs_ai = document.getElementById('play-vs-ai');
   var lichess_ground = document.getElementsByClassName('lichess_ground')[0]
   div_play_vs_ai.appendChild(lichess_ground);
 
-  var div_backandrematch = document.getElementById('backandrematch');
-  div_backandrematch.parentElement.removeChild(div_backandrematch);
-
   var div_moves = document.getElementsByClassName('moves')[0];
-  div_moves.style.height='380px';
+  div_moves.style.height = '195px';
 
   const elementClassesToBeRemoved = ['content is2d', 'clock', 'resign-confirm', 'moretime hint--bottom-left', 'clock_bottom', 'username', 'cemetery'];
   for (let c of elementClassesToBeRemoved) {
     var el = document.getElementsByClassName(c)[0];
     if (el && el.parentElement) el.parentElement.removeChild(el);
   }
+
+  //fix alignment at the bottom of the blue banner on the right
+  document.getElementsByClassName('table_wrap')[0].style.height = '468px';
+
+  setupBackToHomeButton();
+}
+
+function setupBackToHomeButton() {
+  const backtohomeBtn = document.getElementById("backtohomeBtn");
+
+  let backtohmPop = document.getElementById('backtohmPop');
+  backtohmPop.parentElement.removeChild(backtohmPop);
+  var backandrematch = document.getElementById('backandrematch');
+  backandrematch.appendChild(backtohmPop);
+
+  var buttonAbort = document.getElementsByClassName('button hint--bottom abort')[0];
+  buttonAbort.addEventListener("click", function (event) {
+    location.reload();
+  });
+
+  var butonKeepplaying = document.getElementsByClassName('keepplaying')[0];
+  butonKeepplaying.addEventListener("click", function (event) {
+    backtohomeBtn.style.display = 'block';
+    backtohmPop.style.display = 'none';
+  });
+  
+  backtohomeBtn.addEventListener("click", function (event) {
+    backtohomeBtn.style.display = 'none';
+    backtohmPop.style.display = 'block';
+  });
 }
 
 //UI
