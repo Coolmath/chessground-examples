@@ -1,11 +1,3 @@
-let AI_LEVEL = 1;
-/**
- * Sets the AI difficulty level
- * @param {number} aiLevel - may be an integer from 1 to 9 (including both)
- */
-function setAILevel(aiLevel) {
-  AI_LEVEL = aiLevel;
-}
 
 var getUrlParameter = function getUrlParameter(sParam) {
   var sPageURL = window.location.search.substring(1),
@@ -22,6 +14,56 @@ var getUrlParameter = function getUrlParameter(sParam) {
   }
   return false;
 };
+
+let AI_LEVEL = parseInt(getUrlParameter('AI_LEVEL')) ?? 1;
+/**
+ * Sets the AI difficulty level
+ * @param {number} aiLevel - may be an integer from 1 to 9 (including both)
+ */
+function setAILevel(aiLevel) {
+  AI_LEVEL = aiLevel;
+}
+
+let playerColor = getUrlParameter('PLAYER_COLOR') ?? 'white';//'white' or 'black'
+/**
+ * Set the player's color, ie whether white or black is being played by the player
+ * @param {string} color - may be 'white' or 'black'
+ */
+function setPlayerColor(color) {
+  playerColor = color;
+}
+
+let isGameAlreadySetup = false;
+/**
+ * Sets the AI difficulty level and set the player's color, ie whether white or black is being played by the player
+ * @param {number} aiLevel - may be an integer from 1 to 9 (including both)
+ * @param {string} color - may be 'white' or 'black'
+ */
+function setupGame(aiLevel, color) {
+  setAILevel(aiLevel);
+  setPlayerColor(color);
+  isGameAlreadySetup = true;
+  
+  checkGameReadyForStart();
+}
+
+let isLoaded = false;
+function checkGameReadyForStart() {
+  if (isGameAlreadySetup && isLoaded) {
+    ChessgroundExamples.run(document.getElementById('play-vs-ai'));
+
+    let lichess_ground = document.getElementsByClassName('lichess_ground')[0];
+    lichess_ground.style.display = "block";
+
+    function swapDiv(event, elem) {
+      elem.parentNode.insertBefore(elem, elem.parentNode.firstChild);
+    }
+    swapDiv(lichess_ground, document.getElementsByClassName('blue merida')[0]);
+
+    doGameReset();
+  }
+}
+
 var ChessgroundExamples = (function (exports) {
     'use strict';
 
@@ -1529,27 +1571,30 @@ var ChessgroundExamples = (function (exports) {
        */
 
       Page.prototype._onpopstate = (function () {
-        var loaded = false;
         if ( ! hasWindow ) {
           return function () {};
         }
         if (hasDocument && document.readyState === 'complete') {
-          loaded = true;
+          isLoaded = true;
         } else {
           window.addEventListener('load', function() {
-            setTimeout(function() {
-
+            window.doGameReset = function() {
               MOVES_NUM = 1;
               RND_COUNT = 1;
 
               ResetGame();
 
-              loaded = true;
+              if (playerColor === "black") setTimeout(window._proceedAIMove, delay);
+            };
+            setTimeout(function() {
+              isLoaded = true;
+
+              checkGameReadyForStart();
             }, 0);
           });
         }
         return function onpopstate(e) {
-          if (!loaded) return;
+          if (!isLoaded) return;
           var page = this;
           if (e.state) {
             var path = e.state.path;
@@ -5007,7 +5052,7 @@ var ChessgroundExamples = (function (exports) {
         return {
             pieces: read(initial),
             orientation: 'white',
-            turnColor: 'white',
+            turnColor: playerColor,
             coordinates: true,
             ranksPosition: 'right',
             autoCastle: true,
@@ -5424,8 +5469,10 @@ var ChessgroundExamples = (function (exports) {
       container.appendChild(pawnPromotionUICanvas);
       window['ppuCanvas'] = pawnPromotionUICanvas;
 
+      const prefix = playerColor === "white" ? "w" : "b";
+
       const ctx = pawnPromotionUICanvas.getContext("2d");
-      ctx.fillStyle = 'rgba(0,0,0,0.75)';
+      ctx.fillStyle = prefix === "b" ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)';
       ctx.rect(0, 0, 480, 480);
       ctx.fill();
 
@@ -5442,10 +5489,10 @@ var ChessgroundExamples = (function (exports) {
         image.src = "assets/images/pieces/merida/" + name + ".svg";
         return image;
       }
-      const queen = createPiece('wQ', 55, 55);
-      const rock = createPiece('wR', 280, 55);
-      const bishop = createPiece('wB', 55, 250);
-      const knight = createPiece('wN', 280, 250);
+      const queen = createPiece(prefix+'Q', 55, 55);
+      const rock = createPiece(prefix+'R', 280, 55);
+      const bishop = createPiece(prefix+'B', 55, 250);
+      const knight = createPiece(prefix+'N', 280, 250);
 
       pawnPromotionUICanvas.addEventListener("click", function (event) {
         const x = event.offsetX;
@@ -5485,7 +5532,10 @@ var ChessgroundExamples = (function (exports) {
     function hidePawnPromotionUI() {
       pawnPromotionUICanvas.style.zIndex = -1;
     }
+    window.isWinnerMessageVisible = false;
     function showWinnerMessage(youWin) {
+      window.isWinnerMessageVisible = true;
+
       pawnPromotionUICanvas.style.zIndex = 99;
 
       const message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
@@ -5513,11 +5563,17 @@ var ChessgroundExamples = (function (exports) {
     }
     window.showWinnerMessage = showWinnerMessage;
     function hideWinnerMessage() {
+      if (!window.isWinnerMessageVisible) return;
+      window.isWinnerMessageVisible = false;
+
       pawnPromotionUICanvas.style.zIndex = -1;
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
 
       hideCheckmateLabel();
+
+      var follow_up = document.getElementsByClassName("follow_up")[0];
+      if (follow_up && follow_up.parentElement) follow_up.parentElement.removeChild(follow_up);
     }
     window.hideWinnerMessage = hideWinnerMessage;
     function renderCoords(elems, className) {
@@ -5952,7 +6008,9 @@ var ChessgroundExamples = (function (exports) {
 
     function redrawBoardForNewPromotiedPiece(dest, promotionPiece/* 'q','r','b','n' */) {
       let piece = window.state.pieces.get(dest);
-      piece.roleBeforePromotion = piece.role;
+      if (playerColor !== window.state.turnColor) {//if this move was a player's move
+        piece.roleBeforePromotion = piece.role;
+      }
       piece.role = ({
         'q':"queen",
         'r':"rook",
@@ -6224,204 +6282,213 @@ var ChessgroundExamples = (function (exports) {
       window.updateStoryButtonStates();
     };
 
-    function aiPlay(cg, chess, delay, firstMove) {
-        return (orig, dest) => {
+    window._proceedPlayerMove = (orig, dest, promotionPiece) => {
+      let _move = { from: orig, to: dest };
+      if (promotionPiece) {
+        _move['promotion'] = promotionPiece;
+      }
 
+      //replace the pawnwith the new piece for rendering
+      if (promotionPiece) {
+        redrawBoardForNewPromotiedPiece(dest, promotionPiece);
+      }
+
+
+      //for history loging
+      let __move;
+      (function () {
+        let __moves = chess.moves({ verbose: true });
+        __moves = __moves.filter(m => m.from == orig && m.to == dest);
+        if (promotionPiece) {
+          __move = __moves.find(m => m.promotion == promotionPiece);
+        } else {
+          __move = __moves[0];
+        }
+        if (!__move) __move = firstMove ? __moves[0] : __moves[Math.floor(Math.random() * __moves.length)];
+        // console.log('SAN PLAYER: ', __move.san);
+      })();
+
+      chess.move(_move);
+      window.storeActualState();
+
+      //prevent player interaction while AI is 'thinking'
+      window.state.viewOnly = true;
+
+      storeSan(__move.san);
+
+      MOVES_NUM++;
+
+      const fromAsNumNum = parsePosFromCharNumToNumNum(orig);
+      const toAsNumNum = parsePosFromCharNumToNumNum(dest);
+
+      let moves = GenerateValidMoves();
+      let move = null;
+      for (let i = 0; i < moves.length; i++) {
+        if ((moves[i] & 0xFF) == MakeSquare(fromAsNumNum.y, fromAsNumNum.x) &&
+          ((moves[i] >> 8) & 0xFF) == MakeSquare(toAsNumNum.y, toAsNumNum.x)) {
+          move = moves[i];
+        }
+      }
+
+      // console.log('MakeMove Player: ', move)
+      MakeMove(move, promotionPiece);
+
+    };
+
+    window._proceedAIMove = () => {
+      const t0 = Date.now();
+
+      const animDurationRequresWaiting = 250;
+      const minTimeout = Math.max(delay - animDurationRequresWaiting, 0);
+
+      let parsedAiLevel = AI_LEVEL;
+      let aiLevel = isNaN(parsedAiLevel) ? 1 : parsedAiLevel;
+      // console.log("AI LEVEL: ", aiLevel);
+      let maxPly = 1
+      let randYN = 'n'
+      let timeout = 40;
+
+      if (aiLevel === 1) {
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.7, 0.8, 0.9) ? 'y' : 'n';
+        maxPly = 1;
+        timeout = minTimeout;
+      } else if (aiLevel === 2) {
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.6, 0.7, 0.8) ? 'y' : 'n';
+        maxPly = 1;
+        timeout = minTimeout;
+      } else if (aiLevel === 3) {
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.5, 0.6, 0.7) ? 'y' : 'n';
+        maxPly = 1;
+        timeout = minTimeout;
+      } else if (aiLevel === 4) {
+        maxPly = 1;
+        timeout = minTimeout;
+      } else if (aiLevel === 5) {
+        maxPly = 3;
+        timeout = minTimeout;
+      } else if (aiLevel === 6) {
+        maxPly = 10;
+        timeout = minTimeout+250;
+      } else if (aiLevel === 7) {
+        maxPly = 20;
+        timeout = minTimeout+500;
+      } else if (aiLevel === 8) {
+        maxPly = 50;
+        timeout = minTimeout+500;
+      } else /* if (aiLevel === 9)  */{
+        maxPly = 99;
+        timeout = minTimeout+1000;
+      }
+      // console.log(randYN)
+      onSearchCompleted = (bestMove, value, timeTaken, ply)=>{//on search complete
+        if (bestMove != null) {
+            // const pvMessage = BuildPVMessage(bestMove, value, timeTaken, ply);
+            // console.log(pvMessage);
+            // console.log('MakeMove AI: ', bestMove)
+            MakeMove(bestMove);
+
+            var aiFromX = (bestMove & 0xF) - 4;
+            var aiFromY = ((bestMove >> 4) & 0xF) - 2;
+            var aiToX = ((bestMove >> 8) & 0xF) - 4;
+            var aiToY = ((bestMove >> 12) & 0xF) - 2;
+            if (window['-state-'].orientation === 'black') {
+                aiFromY = 7 - aiFromY;
+                aiToY = 7 - aiToY;
+                aiFromX = 7 - aiFromX;
+                aiToX = 7 - aiToX;
+            }
+
+            const t1 = Date.now();
+            const timeDiff = t1 - t0;
+            let remainingDelay = delay - timeDiff;
+            if (remainingDelay < 0) remainingDelay = 0;
+
+            //check AI makes a promotion
+            const _flags = bestMove & 0xFF0000;
+            let _promotionPieceAI = undefined;
+
+            const _moveflagPromotion = 0x10 << 16;
+            const _moveflagPromoteKnight = 0x20 << 16;
+            const _moveflagPromoteQueen = 0x40 << 16;
+            const _moveflagPromoteBishop = 0x80 << 16;
+
+            if (_flags & _moveflagPromotion) {
+              if (_flags & _moveflagPromoteKnight) _promotionPieceAI = 'n'
+              else if (_flags & _moveflagPromoteQueen) _promotionPieceAI = 'q'
+              else if (_flags & _moveflagPromoteBishop) _promotionPieceAI = 'b'
+              else _promotionPieceAI = 'r';
+            }
+
+            setTimeout(() => {
+                let posFrom = parsePosFromNumNumToCharNum(aiFromX, aiFromY);
+                let posTo = parsePosFromNumNumToCharNum(aiToX, aiToY);
+
+                let moves = chess.moves({ verbose: true });
+                moves = moves.filter(m => m.from == posFrom && m.to == posTo);
+                var move;
+                if (_promotionPieceAI) {
+                  move = moves.find(m => m.promotion == _promotionPieceAI);
+                } else {
+                  move = moves[0];
+                }
+                if (!move) move = firstMove ? moves[0] : moves[Math.floor(Math.random() * moves.length)];
+
+                chess.move(move.san);//san is the move to be rendered in the log
+                // console.log('SAN AI: ', move.san)
+                cg.move(move.from, move.to);
+                var turnColor = toColor(chess);
+                var color = toColor(chess);
+                var dests = toDests(chess);
+                cg.set({
+                    turnColor: turnColor,
+                    movable: {
+                        color: color,
+                        dests: dests
+                    }
+                });
+                cg.playPremove();
+
+                if (_promotionPieceAI) redrawBoardForNewPromotiedPiece(posTo, _promotionPieceAI);
+
+                window.storeActualState();
+
+                storeSan(move.san);
+
+                //allow player to interact
+                window.state.viewOnly = false;
+                
+                redrawAll();
+
+                setTimeout(()=>{
+                  let availableMoves = chess.moves({ verbose: true });
+                  if (availableMoves.length === 0) showWinnerMessage(false);
+                }, 500);
+            }, remainingDelay);
+        } else {
+          showWinnerMessage(true);
+        }
+      };
+
+      if (randYN == 'y') RND_COUNT++
+      setTimeout(()=>{//wait till all anims finish playing
+
+        let aiAvailableMoves = chess.moves({ verbose: true });
+        if (aiAvailableMoves.length === 0) {
+          showWinnerMessage(true);
+        } else {
+          SetupRnd(randYN, timeout);
+          Search(onSearchCompleted, maxPly, null);
+        }
+      }, animDurationRequresWaiting);
+    };
+
+    function aiPlay() {
+        return (orig, dest) => {
             let promotionPiece = undefined;
 
             let _proceed = ()=>{
-              let _move = { from: orig, to: dest };
-              if (promotionPiece) {
-                _move['promotion'] = promotionPiece;
-              }
-
-              //replace the pawnwith the new piece for rendering
-              if (promotionPiece) {
-                redrawBoardForNewPromotiedPiece(dest, promotionPiece);
-              }
-              
-              
-              //for history loging
-              let __move;
-              (function(){
-                let __moves = chess.moves({ verbose: true });
-                __moves = __moves.filter(m => m.from == orig && m.to == dest);
-                if (promotionPiece) {
-                  __move = __moves.find(m => m.promotion == promotionPiece);
-                } else {
-                  __move = __moves[0];
-                }
-                if (!__move) __move = firstMove ? __moves[0] : __moves[Math.floor(Math.random() * __moves.length)];
-                // console.log('SAN PLAYER: ', __move.san);
-              })();
-
-              chess.move(_move);
-              window.storeActualState();
-
-              //prevent player interaction while AI is 'thinking'
-              window.state.viewOnly = true;
-
-              storeSan(__move.san);
-
-              MOVES_NUM++;
-
-              const fromAsNumNum = parsePosFromCharNumToNumNum(orig);
-              const toAsNumNum = parsePosFromCharNumToNumNum(dest);
-
-              let moves = GenerateValidMoves();
-              let move = null;
-              for (let i = 0; i < moves.length; i++) {
-                  if ((moves[i] & 0xFF) == MakeSquare(fromAsNumNum.y, fromAsNumNum.x) &&
-                      ((moves[i] >> 8) & 0xFF) == MakeSquare(toAsNumNum.y, toAsNumNum.x)) {
-                      move = moves[i];
-                  }
-              }
-              
-              // console.log('MakeMove Player: ', move)
-              MakeMove(move, promotionPiece);
-
-              const t0 = Date.now();
-
-              const animDurationRequresWaiting = 250;
-              const minTimeout = Math.max(delay - animDurationRequresWaiting, 0);
-
-              let parsedAiLevel = AI_LEVEL ?? parseInt(getUrlParameter('AI_LEVEL'));
-              let aiLevel = isNaN(parsedAiLevel) ? 1 : parsedAiLevel;
-              // console.log("AI LEVEL: ", aiLevel);
-              let maxPly = 1
-              let randYN = 'n'
-              let timeout = 40;
-
-              if (aiLevel === 1) {
-                randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.7, 0.8, 0.9) ? 'y' : 'n';
-                maxPly = 1;
-                timeout = minTimeout;
-              } else if (aiLevel === 2) {
-                randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.6, 0.7, 0.8) ? 'y' : 'n';
-                maxPly = 1;
-                timeout = minTimeout;
-              } else if (aiLevel === 3) {
-                randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.5, 0.6, 0.7) ? 'y' : 'n';
-                maxPly = 1;
-                timeout = minTimeout;
-              } else if (aiLevel === 4) {
-                maxPly = 1;
-                timeout = minTimeout;
-              } else if (aiLevel === 5) {
-                maxPly = 3;
-                timeout = minTimeout;
-              } else if (aiLevel === 6) {
-                maxPly = 10;
-                timeout = minTimeout+250;
-              } else if (aiLevel === 7) {
-                maxPly = 20;
-                timeout = minTimeout+500;
-              } else if (aiLevel === 8) {
-                maxPly = 50;
-                timeout = minTimeout+500;
-              } else /* if (aiLevel === 9)  */{
-                maxPly = 99;
-                timeout = minTimeout+1000;
-              }
-              // console.log(randYN)
-              onSearchCompleted = (bestMove, value, timeTaken, ply)=>{//on search complete
-                if (bestMove != null) {
-                    // const pvMessage = BuildPVMessage(bestMove, value, timeTaken, ply);
-                    // console.log(pvMessage);
-                    // console.log('MakeMove AI: ', bestMove)
-                    MakeMove(bestMove);
-
-                    var aiFromX = (bestMove & 0xF) - 4;
-                    var aiFromY = ((bestMove >> 4) & 0xF) - 2;
-                    var aiToX = ((bestMove >> 8) & 0xF) - 4;
-                    var aiToY = ((bestMove >> 12) & 0xF) - 2;
-                    if (window['-state-'].orientation === 'black') {
-                        aiFromY = 7 - aiFromY;
-                        aiToY = 7 - aiToY;
-                        aiFromX = 7 - aiFromX;
-                        aiToX = 7 - aiToX;
-                    }
-
-                    const t1 = Date.now();
-                    const timeDiff = t1 - t0;
-                    let remainingDelay = delay - timeDiff;
-                    if (remainingDelay < 0) remainingDelay = 0;
-
-                    //check AI makes a promotion
-                    const _flags = bestMove & 0xFF0000;
-                    let _promotionPieceAI = undefined;
-
-                    const _moveflagPromotion = 0x10 << 16;
-                    const _moveflagPromoteKnight = 0x20 << 16;
-                    const _moveflagPromoteQueen = 0x40 << 16;
-                    const _moveflagPromoteBishop = 0x80 << 16;
-
-                    if (_flags & _moveflagPromotion) {
-                      if (_flags & _moveflagPromoteKnight) _promotionPieceAI = 'n'
-                      else if (_flags & _moveflagPromoteQueen) _promotionPieceAI = 'q'
-                      else if (_flags & _moveflagPromoteBishop) _promotionPieceAI = 'b'
-                      else _promotionPieceAI = 'r';
-                    }
-
-                    setTimeout(() => {
-                        let posFrom = parsePosFromNumNumToCharNum(aiFromX, aiFromY);
-                        let posTo = parsePosFromNumNumToCharNum(aiToX, aiToY);
-
-                        let moves = chess.moves({ verbose: true });
-                        moves = moves.filter(m => m.from == posFrom && m.to == posTo);
-                        var move;
-                        if (_promotionPieceAI) {
-                          move = moves.find(m => m.promotion == _promotionPieceAI);
-                        } else {
-                          move = moves[0];
-                        }
-                        if (!move) move = firstMove ? moves[0] : moves[Math.floor(Math.random() * moves.length)];
-
-                        chess.move(move.san);//san is the move to be rendered in the log
-                        // console.log('SAN AI: ', move.san)
-                        cg.move(move.from, move.to);
-                        var turnColor = toColor(chess);
-                        var color = toColor(chess);
-                        var dests = toDests(chess);
-                        cg.set({
-                            turnColor: turnColor,
-                            movable: {
-                                color: color,
-                                dests: dests
-                            }
-                        });
-                        cg.playPremove();
-
-                        if (_promotionPieceAI) redrawBoardForNewPromotiedPiece(posTo, _promotionPieceAI);
-
-                        window.storeActualState();
-
-                        storeSan(move.san);
-
-                        //allow player to interact
-                        window.state.viewOnly = false;
-
-                        setTimeout(()=>{
-                          let availableMoves = chess.moves({ verbose: true });
-                          if (availableMoves.length === 0) showWinnerMessage(false);
-                        }, 500);
-                    }, remainingDelay);
-                } else {
-                  showWinnerMessage(true);
-                }
-              };
-
-              if (randYN == 'y') RND_COUNT++
-              setTimeout(()=>{//wait till all anims finish playing
-
-                let aiAvailableMoves = chess.moves({ verbose: true });
-                if (aiAvailableMoves.length === 0) {
-                  showWinnerMessage(true);
-                } else {
-                  SetupRnd(randYN, timeout);
-                  Search(onSearchCompleted, maxPly, null);
-                }
-              }, animDurationRequresWaiting);
+              _proceedPlayerMove(orig, dest, promotionPiece);
+              _proceedAIMove();              
             };
 
             //check if the player makes a promo, and if yes then show UI for selection of a newly generated pawn
@@ -6440,12 +6507,14 @@ var ChessgroundExamples = (function (exports) {
         };
     }
 
+    const firstMove = false;
+    const delay = 1000;
     const vsRandom = {
         run(el) {
-            const chess = new Chess();
-            const cg = Chessground(el, {
+            window.chess = new Chess();
+            window.cg = Chessground(el, {
                 movable: {
-                    color: 'white',
+                    color: playerColor,
                     free: false,
                     dests: toDests(chess)
                 }
@@ -6453,7 +6522,7 @@ var ChessgroundExamples = (function (exports) {
             cg.set({
                 movable: {
                     events: {
-                        after: aiPlay(cg, chess, 1000, false)
+                        after: aiPlay()
                     }
                 }
             });
@@ -6552,6 +6621,7 @@ function createRematchButton() {
       window.undoLastStoredState();      
       window.undoLastStoredState();
     }
+    window.doGameReset();
   });
 }
 
@@ -6559,6 +6629,7 @@ function removeAllTheUnneededUI() {
   var div_play_vs_ai = document.getElementById('play-vs-ai');
   var lichess_ground = document.getElementsByClassName('lichess_ground')[0]
   div_play_vs_ai.appendChild(lichess_ground);
+  lichess_ground.style.display = "none";
 
   var div_moves = document.getElementsByClassName('moves')[0];
   div_moves.style.height = '195px';
@@ -6610,9 +6681,12 @@ window.addEventListener('load', function() {
     if (sotredStates.length === 0) return;
     
     let lastState = sotredStates[sotredStates.length - 1];
-    if (lastState.turnColor === "black") {
+    if ( (lastState.turnColor === "black" && playerColor === "white") 
+      || (lastState.turnColor === "white" && playerColor === "black")) {
       window.undoLastStoredState();      
       window.undoLastStoredState();
+
+      hideWinnerMessage();
     }
   };
 

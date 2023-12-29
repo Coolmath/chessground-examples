@@ -5836,7 +5836,7 @@ function renderResult(ctrl) {
 }
 
 function renderResultSimple(ctrl) {
-  console.log([30,31,32,34,35].indexOf(ctrl.data.game.status.id) !== -1);
+  // console.log([30,31,32,34,35].indexOf(ctrl.data.game.status.id) !== -1);
   if (ctrl.replayEnabledByPref() && ([30,31,32,34,35].indexOf(ctrl.data.game.status.id) !== -1)) {
     var winner = game.getPlayer(ctrl.data, ctrl.data.game.winner) || { color: "white" };
     var elementToRender = 'p.status.' + (ctrl.data.game.status.id !== 30 ? ctrl.data.game.status.name + '.' : '') + winner.color;
