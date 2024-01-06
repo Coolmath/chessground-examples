@@ -5523,6 +5523,7 @@ var ChessgroundExamples = (function (exports) {
     }
     function showPawnPromotionUI(onSelected) {
       pawnPromotionUICanvas.style.zIndex = 99;
+      pawnPromotionUICanvas.style.display = 'block';
       onPromoPieceSelectedCallback = (selectedPiece) => {
         hidePawnPromotionUI();
         onSelected(selectedPiece);
@@ -5531,12 +5532,14 @@ var ChessgroundExamples = (function (exports) {
     window.showPawnPromotionUI=showPawnPromotionUI;
     function hidePawnPromotionUI() {
       pawnPromotionUICanvas.style.zIndex = -1;
+      pawnPromotionUICanvas.style.display = 'none';
     }
     window.isWinnerMessageVisible = false;
     function showWinnerMessage(youWin) {
       window.isWinnerMessageVisible = true;
 
       pawnPromotionUICanvas.style.zIndex = 99;
+      pawnPromotionUICanvas.style.display = 'block';
 
       const message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
       const size = youWin ? 60 : 40;
@@ -5565,6 +5568,8 @@ var ChessgroundExamples = (function (exports) {
     function hideWinnerMessage() {
       if (!window.isWinnerMessageVisible) return;
       window.isWinnerMessageVisible = false;
+
+      pawnPromotionUICanvas.style.display = 'block';
 
       pawnPromotionUICanvas.style.zIndex = -1;
       const ctx = pawnPromotionUICanvas.getContext("2d");
@@ -6465,7 +6470,7 @@ var ChessgroundExamples = (function (exports) {
                 }, 500);
             }, remainingDelay);
         } else {
-          showWinnerMessage(true);
+          setTimeout(()=>showWinnerMessage(true), 100);
         }
       };
 
@@ -6474,7 +6479,7 @@ var ChessgroundExamples = (function (exports) {
 
         let aiAvailableMoves = chess.moves({ verbose: true });
         if (aiAvailableMoves.length === 0) {
-          showWinnerMessage(true);
+          setTimeout(()=>showWinnerMessage(true), 100);
         } else {
           SetupRnd(randYN, timeout);
           Search(onSearchCompleted, maxPly, null);
