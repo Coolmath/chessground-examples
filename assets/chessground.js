@@ -5541,9 +5541,15 @@ var ChessgroundExamples = (function (exports) {
       pawnPromotionUICanvas.style.zIndex = 99;
       pawnPromotionUICanvas.style.display = 'block';
 
-      const message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
-      const size = youWin ? 60 : 40;
-      const x = youWin ? 101 : 62;
+      let message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
+      let size = youWin ? 60 : 40;
+      let x = youWin ? 101 : 62;
+
+      if (!g_inCheck) {//stalemate
+        message = "STALEMATE!";
+        size = 60;
+        x = 60;
+      }
 
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
@@ -6600,7 +6606,7 @@ function createElementByOutherHTML( str ) {
 }
 
 function showCheckmateLabel(whiteWins) {
-  var p = createElementByOutherHTML('<p class="status ' + (whiteWins ? 'white' : 'black') + '"></p>');
+  var p = createElementByOutherHTML('<p class="status ' + (g_inCheck ? (whiteWins ? 'white' : 'black') : 'draw') + '"></p>');
   var r = document.getElementsByClassName('replay')[0];
   var bb = document.getElementsByClassName('board-buttons')[0];
   r.insertBefore(p, bb);
