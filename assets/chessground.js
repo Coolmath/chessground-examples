@@ -1585,6 +1585,7 @@ var ChessgroundExamples = (function (exports) {
               ResetGame();
 
               if (playerColor === "black") setTimeout(window._proceedAIMove, delay);
+              if (playerColor != state.orientation) window.toggleOrientation$1();
             };
             setTimeout(function() {
               isLoaded = true;
