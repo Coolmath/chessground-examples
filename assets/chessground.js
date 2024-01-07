@@ -5554,15 +5554,15 @@ var ChessgroundExamples = (function (exports) {
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
 
-      ctx.fillStyle = 'rgba(0,0,0,0.15)';
+      ctx.fillStyle = 'rgba(0,0,0,0.6)';
       ctx.rect(0, 0, 480, 480);
       ctx.fill();
 
       ctx.font = size + "px Arial";
 
-      ctx.fillStyle = "#B58863";
+      ctx.fillStyle = "#000000";
       ctx.fillText(message, x, 255);
-      ctx.strokeStyle = "#F0D9B5";
+      ctx.strokeStyle = "#FFFFFF";
       ctx.strokeText(message, x, 255);
 
       //let's also show default UI
