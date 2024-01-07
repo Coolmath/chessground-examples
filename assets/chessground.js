@@ -6150,34 +6150,36 @@ var ChessgroundExamples = (function (exports) {
       window.updateStoryButtonStates();
     };
 
-    window.updateStoryButtonStates = function() {
-      function setEnabled(button, glowed) {
-        if (button.classList.contains("disabled")) {
-          button.classList.remove("button", "disabled");
-        }
-        if (glowed) {
-          button.classList.add("button", "glowed");
-        } else {
-          button.classList.add("button");
-        }
-        
-        button.style.pointerEvents = '';
+    
+    function setEnabled(button, glowed) {
+      if (button.classList.contains("disabled")) {
+        button.classList.remove("button", "disabled");
       }
-      function setDisabled(button, glowed) {
-        if (glowed) {
-          if (button.classList.contains("glowed")) {
-            button.classList.remove("button", "glowed");
-          }
-        } else {
-          if (button.classList.contains("button")) {
-            button.classList.remove("button");
-          }  
+      if (glowed) {
+        button.classList.add("button", "glowed");
+      } else {
+        button.classList.add("button");
+      }
+      
+      button.style.pointerEvents = '';
+    }
+    function setDisabled(button, glowed) {
+      if (glowed) {
+        if (button.classList.contains("glowed")) {
+          button.classList.remove("button", "glowed");
         }
-        
-        button.classList.add("button", "disabled");
+      } else {
+        if (button.classList.contains("button")) {
+          button.classList.remove("button");
+        }  
+      }
+      
+      button.classList.add("button", "disabled");
 
-        button.style.pointerEvents = 'none';
-      }
+      button.style.pointerEvents = 'none';
+    }
+
+    window.updateStoryButtonStates = function() {
       
       setEnabled(buttonFirstStoryState);
       setEnabled(buttonPrevStoryState);
@@ -6327,6 +6329,7 @@ var ChessgroundExamples = (function (exports) {
 
       //prevent player interaction while AI is 'thinking'
       window.state.viewOnly = true;
+      setDisabled(buttonFlip, false);
 
       storeSan(__move.san);
 
@@ -6470,6 +6473,7 @@ var ChessgroundExamples = (function (exports) {
 
                 //allow player to interact
                 window.state.viewOnly = false;
+                setEnabled(buttonFlip, false);
                 
                 redrawAll();
 
@@ -6714,6 +6718,7 @@ window.addEventListener('load', function() {
 
   window.buttonFlip = document.getElementsByClassName('button flip hint--top')[0];
   buttonFlip.onclick = function() {
+    if (window.state.viewOnly) return;
     window.toggleOrientation$1()
   };
 
