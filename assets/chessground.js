@@ -6667,9 +6667,13 @@ function setupBackToHomeButton() {
   var backandrematch = document.getElementById('backandrematch');
   backandrematch.appendChild(backtohmPop);
 
+  function doBackToHomeAction() {
+    window.location = "https://www.coolmathgames.com/0-chess";
+  }
+
   var buttonAbort = document.getElementsByClassName('button hint--bottom abort')[0];
   buttonAbort.addEventListener("click", function (event) {
-    location.reload();
+    doBackToHomeAction();
   });
 
   var butonKeepplaying = document.getElementsByClassName('keepplaying')[0];
@@ -6679,8 +6683,12 @@ function setupBackToHomeButton() {
   });
   
   backtohomeBtn.addEventListener("click", function (event) {
-    backtohomeBtn.style.display = 'none';
-    backtohmPop.style.display = 'block';
+    if (window.isWinnerMessageVisible) {
+      doBackToHomeAction();
+    } else {
+      backtohomeBtn.style.display = 'none';
+      backtohmPop.style.display = 'block';
+    }
   });
 }
 
