@@ -6077,6 +6077,8 @@ var ChessgroundExamples = (function (exports) {
       window['-sotredStates-'].push(state);
 
       window.currentRenderedStateIndex = window['-sotredStates-'].length;
+
+      window.doAutoScroll(window['-sotredStates-'].length + 1);
     };
 
     window.actualStoredState = null;

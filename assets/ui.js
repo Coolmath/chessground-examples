@@ -5965,17 +5965,23 @@ function renderButtons(ctrl) {
   ]);
 }
 
-function autoScroll(el, ctrl) {
+function autoScroll(el, stepsNum/* ctrl */) {
   raf(function() {
-    if (ctrl.data.steps.length < 7) return;
+    // if (ctrl.data.steps.length < 7) return;
+    if (stepsNum < 7) return;
     var st;
-    if (ctrl.vm.ply >= round.lastPly(ctrl.data) - 1) st = 9999;
-    else {
+    // if (ctrl.vm.ply >= round.lastPly(ctrl.data) - 1) st = 9999;
+    // else {
       var plyEl = el.querySelector('.active') || el.querySelector('turn:first-child');
       if (plyEl) st = plyEl.offsetTop - el.offsetHeight / 2 + plyEl.offsetHeight / 2;
-    }
+    // }
     if (st !== undefined) el.scrollTop = st;
   });
+}
+
+window.doAutoScroll = function(stepsNum) {
+  var movesContainer = document.getElementsByClassName("moves")[0];
+  autoScroll(movesContainer, stepsNum);
 }
 
 function racingKingsInit(d) {
