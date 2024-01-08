@@ -64,11 +64,11 @@ function checkGameReadyForStart() {
   }
 }
 
+let MOVES_NUM = 1;
+let RND_COUNT = 1;
 var ChessgroundExamples = (function (exports) {
     'use strict';
 
-    let MOVES_NUM = 1;
-    let RND_COUNT = 1;
     let onSearchCompleted;
 
     function createElement$1(tagName, options) {
@@ -6126,6 +6126,9 @@ var ChessgroundExamples = (function (exports) {
 
       window.renderStoryStatesList();
       window.updateStoryButtonStates();
+
+      MOVES_NUM = 1;
+      RND_COUNT = 1;
     };
 
     window.renderStoryState = function(_state, isActual) {  
@@ -6366,15 +6369,15 @@ var ChessgroundExamples = (function (exports) {
       let timeout = 40;
 
       if (aiLevel === 1) {
-        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.7, 0.8, 0.9) ? 'y' : 'n';
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.5, 0.6, 0.7) ? 'y' : 'n';
         maxPly = 1;
         timeout = minTimeout;
       } else if (aiLevel === 2) {
-        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.6, 0.7, 0.8) ? 'y' : 'n';
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.3, 0.45, 0.6) ? 'y' : 'n';
         maxPly = 1;
         timeout = minTimeout;
       } else if (aiLevel === 3) {
-        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.5, 0.6, 0.7) ? 'y' : 'n';
+        randYN = aiRandomizeHelper(RND_COUNT / MOVES_NUM, 0.2, 0.3, 0.4) ? 'y' : 'n';
         maxPly = 1;
         timeout = minTimeout;
       } else if (aiLevel === 4) {
