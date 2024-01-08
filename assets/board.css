@@ -1,0 +1,1616 @@
+/* chessground */
+
+.cg-512 .cg-board-wrap {
+  width: 512px;
+  height: 512px;
+  position: relative;
+}
+.cg-board {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  line-height: 0;
+  background-size: cover;
+}
+.manipulable .cg-board.sha {
+  -webkit-transform: skew(2deg) rotate(1deg);
+  transform: skew(2deg) rotate(1deg);
+}
+.manipulable .cg-board {
+  cursor: pointer;
+}
+.is2d .cg-board {
+  top: 0;
+  height: 100%;
+  border-color: #ffffff;
+  border-style: solid;
+  border-width: 2px 16px 15px 2px;
+}
+.is3d .cg-board-wrap{
+  top: 0;
+  height: 100%;
+  border-color: #ffffff;
+  border-style: solid;
+  border-width: 2px 14px 15px 2px;
+}
+square {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+}
+square[data-coord-x]::after,
+square[data-coord-y]::before {
+  position: absolute;
+  font-size: 11px;
+  line-height: 11px;
+  opacity: 0.7;
+  text-transform: uppercase;
+}
+square[data-coord-x]::after {
+  content: attr(data-coord-x);
+  left: 1px;
+  bottom: 1px;
+}
+square[data-coord-y]::before {
+  content: attr(data-coord-y);
+  right: 1px;
+  top: 1px;
+}
+body.coords_1 square[data-coord-x]::after,
+body.coords_1 square[data-coord-y]::before {
+  color: #fff;
+  text-shadow: 0 1px 2px #000;
+}
+body.coords_2 square[data-coord-x]::after {
+  bottom: -12px;
+  left: calc(50% - 3.5px);
+  font-weight: bold;
+}
+body.coords_2 square[data-coord-y]::before {
+  right: -9px;
+  top: calc(50% - 7px);
+  font-weight: bold;
+}
+body.highlight .manipulable square.drag-over {
+  background: rgba(255, 255, 255, 0.1);
+}
+body.destination .cg-board square.move-dest {
+  background: radial-gradient(rgba(20, 85, 30, 0.3) 17%, #208530 0, rgba(0, 0, 0, 0.3) 0, rgba(0, 0, 0, 0) 0);
+  cursor: pointer;
+}
+body.destination .cg-board square.oc.move-dest {
+  background: radial-gradient(transparent 0%, transparent 80%, rgba(20, 85, 0, 0.3) 80%);
+}
+body.destination .cg-board square.premove-dest {
+  background: radial-gradient(rgba(20, 30, 85, 0.2) 17%, #203085 0, rgba(0, 0, 0, 0.2) 0, rgba(0, 0, 0, 0) 0);
+}
+body.destination .cg-board square.oc.premove-dest {
+  background: radial-gradient(transparent 0%, transparent 80%, rgba(20, 30, 85, 0.2) 80%);
+}
+body.highlight .cg-board square.move-dest.drag-over,
+body.highlight .cg-board square.move-dest:hover {
+  background: rgba(20, 85, 30, 0.3);
+}
+body.highlight .cg-board square.premove-dest.drag-over,
+body.highlight .cg-board square.premove-dest:hover {
+  background: rgba(20, 30, 85, 0.2);
+}
+body.base .cg-board square.selected {
+  background-color: rgba(20, 85, 30, 0.5);
+}
+body.highlight .cg-board square.last-move,
+.mini_board .cg-board square.last-move {
+  background-color: rgba(155, 199, 0, 0.41);
+}
+body.highlight .cg-board square.check {
+  background: radial-gradient(ellipse at center, rgba(255, 0, 0, 1) 0%, rgba(231, 0, 0, 1) 25%, rgba(169, 0, 0, 0) 89%, rgba(158, 0, 0, 0) 100%);
+}
+body.base .cg-board square.current-premove {
+  background-color: rgba(20, 30, 85, 0.5);
+}
+body.base .cg-board square.exploding1 {
+  background-color: rgba(255, 255, 255, 0.5);
+}
+body.base .cg-board square.exploding2 {
+  background-color: rgba(255, 0, 0, 0.5);
+  transition: background-color 0.1s;
+}
+piece {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  transform: translate3d(0, 0, 0);
+  -webkit-transform: translate3d(0, 0, 0);
+  z-index: 2;
+  /* no less than 2 */
+}
+.mini_board piece {
+  transform: none;
+  -webkit-transform: none;
+  z-index: initial;
+}
+.lichess_board.blindfold piece,
+.other_games.blindfold piece {
+  opacity: 0;
+}
+body.highlight .lichess_board.blindfold square.check {
+  background: none;
+}
+.is2d piece {
+  width: 100%;
+  height: 100%;
+  left: 0;
+  bottom: 0;
+}
+piece.dragging {
+  z-index: 3;
+  cursor: move;
+}
+piece.ghost {
+  opacity: 0.3;
+}
+/* minimal dom overrides */
+
+.minimal-dom piece {
+  position: absolute;
+  width: 12.5%;
+  height: 12.5%;
+}
+.cg-board-wrap svg {
+  overflow: hidden;
+  position: relative;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  opacity: 0.6;
+}
+.cg-board-wrap svg * {
+  transition: 0.3s;
+}
+/* lichess */
+
+#lichess {
+  position: relative;
+  min-height: 512px;
+}
+div.lichess_game {
+  display: flex;
+  height: 512px;
+}
+div.lichess_game div.lichess_board_wrap {
+  position: relative;
+}
+.is3d .lichess_board_wrap {
+  top: 39px;
+}
+body.blind_mode .cg-board-wrap {
+  display: none;
+}
+div.lichess_game div.lichess_ground {
+  display: flex;
+  flex-flow: column nowrap;
+  padding-left: 25px;
+  width: 242px;
+  margin-top: 53px;
+}
+.dropdown .background a.buttons{
+ color: #848484 !important;
+}
+div.lichess_game div.lichess_ground.for_bot h1 {
+  font-size: 2em;
+}
+div.lichess_game div.lichess_ground.for_bot p {
+  margin: 1em 0;
+}
+div.lichess_board {
+  position: relative;
+  width: 528px;
+}
+/* 2D boards */
+
+.blue .is2d .cg-board,
+#top div.color_demo.blue {
+  background-image: url(../images/board/blue.png);
+}
+.blue2 .is2d .cg-board,
+#top div.color_demo.blue2 {
+  background-image: url(../images/board/blue2.jpg);
+}
+.wood2 .is2d .cg-board,
+#top div.color_demo.wood2 {
+  background-image: url(../images/board/wood2.jpg);
+}
+.wood3 .is2d .cg-board,
+#top div.color_demo.wood3 {
+  background-image: url(../images/board/wood3.jpg);
+}
+.blue3 .is2d .cg-board,
+#top div.color_demo.blue3 {
+  background-image: url(../images/board/blue3.jpg);
+}
+.marble .is2d .cg-board,
+#top div.color_demo.marble {
+  background-image: url(../images/board/marble.jpg);
+}
+.brown .is2d .cg-board,
+#top div.color_demo.brown {
+  background-image: url(../images/board/brown.png);
+}
+.green .is2d .cg-board,
+#top div.color_demo.green {
+  background-image: url(../images/board/green.png);
+}
+.olive .is2d .cg-board,
+#top div.color_demo.olive {
+  background-image: url(../images/board/olive.jpg);
+}
+.purple .is2d .cg-board,
+#top div.color_demo.purple {
+  background-image: url(../images/board/purple.png);
+}
+.grey .is2d .cg-board,
+#top div.color_demo.grey {
+  background-image: url(../images/board/grey.jpg);
+}
+.wood .is2d .cg-board,
+#top div.color_demo.wood {
+  background-image: url(../images/board/wood-1024.jpg);
+}
+.canvas .is2d .cg-board,
+#top div.color_demo.canvas {
+  background-image: url(../images/board/canvas2-1024.jpg);
+}
+.leather .is2d .cg-board,
+#top div.color_demo.leather {
+  background-image: url(../images/board/leather-1024.jpg);
+}
+.metal .is2d .cg-board,
+#top div.color_demo.metal {
+  background-image: url(../images/board/metal-1024.jpg);
+}
+.maple .is2d .cg-board,
+#top div.color_demo.maple {
+  background-image: url(../images/board/maple.jpg);
+}
+
+.kingOfTheHill .cg-board::before {
+  width: 25%;
+  height: 25%;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.6);
+  content: '';
+  position: absolute;
+  top: 37.5%;
+  left: 37.5%;
+}
+
+/* Racing Kings board decorations */
+
+.racingKings .cg-board.orientation-white::before {
+  width: 100%;
+  height: 12.5%;
+  box-shadow: inset 0 -2px 10px rgba(0, 0, 0, 0.5);
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.racingKings .cg-board.orientation-black::before {
+  width: 100%;
+  height: 12.5%;
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.5);
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+}
+
+.is2d .cg-board-wrap.minimal-dom {
+  background: none;
+}
+mono-piece {
+  width: 32px;
+  height: 32px;
+  background-size: cover;
+  display: inline-block;
+}
+mono-piece.pawn {
+  background-image: url(../piece/mono/P.svg);
+}
+mono-piece.bishop {
+  background-image: url(../piece/mono/B.svg);
+}
+mono-piece.knight {
+  background-image: url(../piece/mono/N.svg);
+}
+mono-piece.rook {
+  background-image: url(../piece/mono/R.svg);
+}
+mono-piece.queen {
+  background-image: url(../piece/mono/Q.svg);
+}
+mono-piece.king {
+  background-image: url(../piece/mono/K.svg);
+}
+#top piece.cburnett {
+  background-image: url(../piece-src/cburnett/wN.svg);
+}
+#top piece.merida {
+  background-image: url(../piece/merida/wN.svg);
+}
+#top piece.chess7 {
+  background-image: url(../piece/chess7/wN.svg);
+}
+#top piece.spatial {
+  background-image: url(../piece/spatial/wN.svg);
+}
+#top piece.alpha {
+  background-image: url(../piece/alpha/wN.svg);
+}
+#top piece.pirouetti {
+  background-image: url(../piece-src/pirouetti/wN.svg);
+}
+#top piece.reillycraig {
+  background-image: url(../piece/reillycraig/wN.svg);
+}
+#top piece.fantasy {
+  background-image: url(../piece/fantasy/wN.svg);
+}
+#top piece.shapes {
+  background-image: url(../piece/shapes/wN.svg);
+}
+#top piece.chessnut {
+  background-image: url(../piece/chessnut/wN.svg);
+}
+#top piece.companion {
+  background-image: url(../piece/companion/wN.svg);
+}
+.pirouetti .is2d piece.piece.white {
+  -webkit-filter: drop-shadow(0 0 0.5px #000);
+}
+.pirouetti .is2d piece.piece.black {
+  -webkit-filter: drop-shadow(0 0 0.6px #e0e0e0);
+}
+.pirouetti .is2d piece.piece.ui-draggable-dragging,
+.pirouetti .is2d .piece.animating {
+  -webkit-filter: none!important;
+}
+body.kappa .cg-board.orientation-white piece.king.white,
+body.kappa .cg-board.orientation-black piece.king.black {
+  background-image: url(../piece/other/kappa.png);
+}
+body.doggy .cg-board.orientation-white piece.pawn.white,
+body.doggy .cg-board.orientation-black piece.pawn.black {
+  background-image: url(../piece/other/doggy.png);
+}
+
+
+/* create a game */
+div.game_config{
+  left:  0%;
+  position: relative;
+  float: leftc;
+  width: 400px;
+  height: 345px;
+  margin-top: 256px;
+  display: inline-block;
+  margin-right: 65px;
+  /* position: absolute; */
+  z-index: 5010;
+  transform: translate(0, -50%);
+  -webkit-transform: translate(0, -50%);
+  font-size: 14px;
+  line-height: 1.8em;
+  background: #fff;
+  box-shadow: 0 0 95px 25px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  box-sizing: border-box;
+  padding-top: 30px;
+}
+
+
+div.game_config_ai{
+  left:  0%;
+  position: relative;
+  float: left;
+  width: 400px;
+  height: 345px;
+  margin-top: 256px;
+  display: inline-block;
+  margin-left: 92px;
+  /* position: absolute; */
+  z-index: 5010;
+  transform: translate(0, -50%);
+  -webkit-transform: translate(0, -50%);
+  font-size: 14px;
+  line-height: 1.8em;
+  background: #fff;
+  box-shadow: 0 0 95px 25px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  box-sizing: border-box;
+  padding-top: 30px;
+}
+
+
+/* friend games */
+
+div.game_config_friend  {
+  left:  0%;
+  position: relative;
+  background: #F00;
+  width: 400px;
+  height: 210px;
+  margin-top: 198px;
+  display: inline-block;
+  margin-left: 92px;
+  z-index: 5010;
+  transform: translate(0, -50%);
+  -webkit-transform: translate(0, -50%);
+  font-size: 14px;
+  line-height: 1.8em;
+  background: #fff;
+  box-shadow: 0 0 95px 25px rgba(0, 0, 0, 0.6);
+  text-align: center;
+  box-sizing: border-box;
+  padding-top: 30px;
+  float:left;
+}
+.game_config_friend form{
+  background: #FFF;
+}
+
+.game_config_friend form .variant{
+  display: none;
+}
+
+.game_config_ai form .variant{
+  display: none;
+}
+
+.lichess_overboard {
+  z-index: 5010;
+  width: 400px;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  padding: 15px 0 22px 0;
+  font-size: 14px;
+  line-height: 1.8em;
+  background: #fff;
+  box-shadow: 0 0 95px 25px rgba(0,0,0,0.6);
+  text-align: center;
+  box-sizing: border-box;
+}
+.lichess_challenge{
+	position:absolute;
+	width:700px;
+}
+div.lichess_overboard.padded {
+  padding: 15px;
+  /*top: 50%;*/
+  top: 15%;
+  position: absolute;
+  color: #000;
+}
+div.lichess_overboard.padded.lichess_challenge{
+top: 25%;
+}
+.cmg-button-text{
+  color: #848484 !important;
+}
+.cmg-submit-button{
+  background: #23b0db;
+  color: #FFF;
+  margin-top: 10px;
+  font-family: 'ProximaNova Soft Bold';
+  width: 100px;
+  border-radius: 8px;
+  margin: 20px auto;
+}
+#challenge_await .spinner {
+  width: 90px;
+  height: 90px;
+}
+
+#ping_challenge {
+  padding-top: 15px;
+  padding-left: 40px;
+}
+
+#cancel-form {
+  margin: 10px;
+  margin-top: 20px;
+}
+
+#ping_challenge .spinner {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 20px;
+}
+
+#ping_challenge p {
+  text-align: left;
+}
+
+div.premove_alert,
+div.dont_touch {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 5px 0;
+  font-weight: bold;
+  color: #fff;
+  background: #d85000;
+  z-index: 50;
+}
+#lichess_id_input {
+  margin: 10px;
+  margin-left: 0px;
+  width: 30%;
+  text-align: center;
+  font-size: 1.8em;
+  padding: 0.5em 0;
+  color: #0e0e0e;
+  font-weight:bold;
+}
+
+.flex {
+  display: flex;
+}
+
+.flex-ver-center {
+  align-items: center;
+}
+
+.flex-hor-center {
+  justify-content: center;
+}
+
+.flex-hor-left {
+  justify-content: flex-start;
+}
+
+.flex-hor-right {
+  justify-content: flex-end;
+}
+
+.lichess_board_wrap .variant_reminder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  z-index: 5;
+  transition: 0.6s;
+  text-shadow: 7px 10px 2px rgba(0, 0, 0, 0.3);
+  width: 512px;
+  height: 512px;
+  line-height: 512px;
+  text-align: center;
+}
+.lichess_board_wrap .variant_reminder::before {
+  font-size: 290px;
+  opacity: 0.9;
+  color: #888;
+}
+.lichess_board_wrap .variant_reminder.gone {
+  opacity: 0;
+  transform: translateY(-100px);
+  -webkit-transform: translateY(-100px);
+}
+#promotion_choice {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  width: 100%;
+  height: 100%;
+  background: rgba(250, 250, 250, 0.7);
+  text-align: center;
+  z-index: 5;
+}
+#promotion_choice square {
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: #b0b0b0;
+  box-shadow: inset 0 0 25px 3px #808080;
+  box-sizing: border-box;
+  transition: 0.2s;
+}
+.is2d #promotion_choice piece {
+  transition: 0.2s;
+  transform: scale(0.8);
+  -webkit-transform: scale(0.8);
+}
+#promotion_choice square:hover {
+  box-shadow: inset 0 0 48px 8px #d85000;
+  border-radius: 0%;
+}
+.is2d #promotion_choice square:hover piece {
+  transform: none;
+  -webkit-transform: none;
+}
+div.table_wrap {
+  flex: 0 1 auto;
+  width: 242px;
+  position: relative;
+  border: 1px solid #4f80a2;
+  background-color: #294d6d;
+  height:503px;
+  padding-top:10px;
+  overflow: hidden;
+}
+div.table_wrap .table {
+    background: #294d6d;
+    color: white;
+}
+div.table {
+  padding: 10px;
+}
+.lichess_ground .replay .moves {
+  border-top: 1px solid #e2e2e2;
+  border-bottom: 1px solid #e2e2e2;
+  margin: 0 -10px 0 -10px;
+  height: 115px;
+  overflow: auto;
+  position: relative;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+.variant_crazyhouse .lichess_ground .replay .moves {
+  height: 100px;
+}
+.lichess_ground .replay turn {
+  display: flex;
+  height: 26px;
+}
+.lichess_ground .replay turn > index,
+.lichess_ground .replay turn > move {
+  display: inline-block;
+  height: 22px;
+  line-height: 22px;
+}
+.lichess_ground .replay turn > index {
+  flex: 0 0 34px;
+  padding: 2px 0;
+  background: #315c7f;
+  text-align: center;
+  font-family: 'Roboto';
+  font-weight: 300;
+}
+.lichess_ground .replay turn > move {
+  flex: 1 1 50%;
+  font-family: 'ChessSansPiratf', sans-serif;
+  font-size: 17px;
+  padding: 2px 5px;
+}
+.lichess_ground .replay move:not(.empty) {
+  cursor: pointer;
+  transition: background-color 0.13s;
+}
+.lichess_ground .replay move:not(.empty):hover {
+  background: #e0e0e0;
+}
+.lichess_ground .replay move.active,
+.lichess_ground .replay move.active::after {
+  color: #63a1ca!important; /* highlight color */
+  font-weight: bold;
+}
+.lichess_ground .replay move.context_menu {
+  background: #3893E8;
+  color: #fff;
+}
+.lichess_ground .replay .result {
+  font-weight: bold;
+  font-size: 1.3em;
+  padding: 4px 0;
+  text-align: center;
+  display: none;
+}
+.lichess_ground .replay .status {
+  background: url(../images/cmg-images/status-bg.png);
+  font-size: 14px;
+  height: 39px;
+  margin: -28px 0px -5px -14px;
+  padding-top: 16px;
+  padding-left: 20px;
+  text-align: left;
+  width: 232px;
+  font-weight: bold;
+  display: none;
+}
+.lichess_ground .table .replay .status {
+  display: block;
+}
+.lichess_ground .replay .status.black{
+  background: url(../images/cmg-images/black-wins.png);
+  font-size: 0px;
+}
+.lichess_ground .replay .status.white{
+  background: url(../images/cmg-images/white-wins.png);
+   font-size: 0px;
+}
+.lichess_ground .replay .status.outoftime.white{
+  background: url(../images/cmg-images/whitewins-timeout.png);
+   font-size: 0px;
+}
+.lichess_ground .replay .status.outoftime.black{
+  background: url(../images/cmg-images/blackwins-timeout.png);
+   font-size: 0px;
+ }
+.lichess_ground .replay .status.resign.white{
+  background: url(../images/cmg-images/whitewins_black_resigns.png);
+   font-size: 0px;
+}
+.lichess_ground .replay .status.resign.black{
+  background: url(../images/cmg-images/blackwins_white_resigns.png);
+   font-size: 0px;
+ }
+
+.lichess_ground .replay .status.stalemate{
+  background: url(../images/cmg-images/tie-game.png);
+  font-size: 0px;
+}
+.lichess_ground .replay .status.draw{
+  background: url(../images/cmg-images/draw-game.png);
+  font-size: 0px;
+}
+.lichess_ground .replay .moves .status{
+  display: none;
+}
+.lichess_ground .replay .buttons {
+  text-align: center;
+  margin: 8px 0 5px 0;
+}
+.lichess_ground .replay a.button {
+  opacity: 0.9;
+  padding: 4px 7px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  margin-left: -1px;
+  margin-right: -1px;
+}
+.lichess_ground .replay a.flip {
+  margin-right: 10px;
+}
+.lichess_ground .replay a.analysis {
+  margin-left: 10px;
+  display: none;
+}
+.lichess_ground .replay a.disabled {
+  cursor: default;
+}
+.lichess_ground .replay a.disabled::before {
+  opacity: 0.4;
+  text-shadow: none !important;
+}
+.pocket {
+  border-radius: 3px;
+  box-shadow: 0 2px 3px rgba(0,0,0,0.3) inset;
+  width: 100%;
+  flex: 0 0 56px;
+  background: #888;
+  white-space: nowrap;
+  max-width: 244px;
+  overflow: hidden;
+}
+.pocket.top {
+  margin-bottom: 10px;
+}
+.pocket.bottom {
+  margin-top: 10px;
+}
+.pocket piece {
+  display: inline-block;
+  width: 48.5px!important;
+  height: 56px!important;
+  background-position: center;
+  position: relative;
+}
+.pocket piece:first-child {
+  border-radius: 3px 0 0 3px;
+}
+.pocket.usable piece {
+  cursor: pointer;
+  transition: background-color 0.13s;
+}
+.pocket.usable piece:hover {
+  background-color: #999;
+}
+.pocket piece[data-nb='0'] {
+  cursor: auto;
+  opacity: 0.1;
+}
+.pocket piece::after {
+  content: attr(data-nb);
+  bottom: 0;
+  right: 0;
+  position: absolute;
+  line-height: 14px;
+  padding: 3px 5px 4px 5px;
+  font-weight: bold;
+  border-radius: 2px;
+  font-size: 18px;
+}
+.pocket piece[data-nb='0']::after {
+  content: none;
+}
+div.table.spectator {
+  top: 160px;
+}
+div.table_not_started {
+  position: absolute;
+  top: 100px;
+  left: 0;
+  width: 242px;
+  border: none;
+  padding: 0;
+}
+div.table .spinner {
+  margin: 7px auto;
+  width: 30px;
+  height: 30px;
+}
+div.table div.username {
+  white-space: nowrap;
+  font-weight:bold;
+}
+div.table div.username:first-child {
+  margin-bottom: 6px;
+  display: none;
+}
+div.table div.username:last-child {
+  margin-top: 6px;
+  display: none;
+}
+div.table div.username span.status {
+  display: inline-block;
+  margin-left: 5px;
+}
+div.table div.username span.status span {
+  color: #5b94b6;
+}
+div.table div.username.on-game span.status span {
+  color: #FFF;
+}
+div.table .message {
+  margin: 20px 0;
+}
+div.table .message::before {
+  font-size: 3em;
+  float: left;
+  margin-right: 10px;
+}
+div.table .button.strong {
+  padding-top: 1em;
+  padding-bottom: 1em;
+  font-weight: bold;
+  font-size: 1.2em;
+}
+div.table_wrap .whos_turn {
+  width: 100%;
+  text-align: center;
+  font-weight: bold;
+  color: white;
+  font-size: 15px;
+  /*text-transform: uppercase;*/
+}
+div.table_wrap .clock {
+  position: relative;
+  width: 100%;
+}
+div.table_wrap .clock > * {
+  display: inline;
+}
+div.table_wrap .clock.turning {
+  background: rgb(32,132,224);
+  border-top: 1px solid rgb(190,233,255);
+  border-bottom: 1px solid rgb(190,233,255);
+  background: radial-gradient(rgb(32,132,224), rgb(86,166,238));
+}
+
+div.table_wrap .clock.infinite {
+  text-align: center;
+  padding: 12px 0;
+  background: rgb(32,132,224);
+  border-top: 1px solid rgb(190,233,255);
+  border-bottom: 1px solid rgb(190,233,255);
+  background: radial-gradient(rgb(32,132,224), rgb(86,166,238));
+}
+/*div.table_wrap .clock .bar {
+  position: absolute;
+  width: 275px;
+  height: 4px;
+}
+div.table_wrap .clock_top .bar {
+  bottom: -4px;
+}
+div.table_wrap .clock_bottom .bar {
+  top: -4px;
+}
+div.table_wrap .clock .bar span {
+  display: block;
+  height: 1px;
+  width: 0;
+  background: #e2e2e2;
+}
+div.table_wrap .clock .bar.berserk span {
+  background: #dc322f;
+}*/
+div.table_wrap .clock > .time {
+  margin: 8px;
+  display: inline-block;
+  /*border: 1px solid #ccc;*/
+  background: url("../images/cmg-images/time_bg.png");
+  background-repeat: no-repeat;
+  color:#ffffff;
+  padding: 0 5px;
+  font-size: 24px;
+  font-family: monospace, 'Noto Sans', 'Lucida Grande';
+}
+div.table_wrap > .clock_bottom {
+  bottom: 0;
+  position: absolute;
+}
+div.table_wrap > .clock_top {
+  margin-bottom: 13px;
+  margin-top: -10px;
+}
+div.table_wrap .correspondence.clock > .time {
+  font-size: 20px;
+}
+div.table_wrap .clock .time tenths {
+  font-size: 80%;
+  display: none;
+}
+div.table_wrap .clock .time huns {
+  font-size: 60%;
+}
+div.table_wrap .clock .time b {
+  font-weight: bold;
+}
+div.table_wrap .clock .time seph {
+  opacity: 0.7;
+}
+div.table_wrap .clock .time sepl {
+  opacity: 0.15;
+}
+
+div.table_wrap .clock:not(.running) .time {
+  background: rgb(31,107,176);
+  border: 1px solid white;
+}
+
+div.table_wrap .clock.running .time {
+  background: #fff077;
+  border: 1px solid white;
+  color: #444;
+}
+div.table_wrap .clock.running.emerg .time {
+  background-color: #eFAAAA !important;
+  color: #444;
+}
+div.table_wrap .clock.outoftime .time {
+  background-color: #eFAAAA !important;
+  font-weight: bold;
+  color: #444;
+  background-image:none;
+}
+/*div.table_wrap .clock_top .time {
+  border-radius: 2px 2px 2px 2px;
+}
+div.table_wrap .clock_bottom .time {
+  border-radius: 2px 2px 2px 2px;
+}*/
+div.table_wrap .berserk.button {
+  font-size: 17px;
+  margin-left: 5px;
+  line-height: 17px;
+  vertical-align: -3px;
+}
+div.table_wrap a.moretime {
+  opacity: 0.4;
+  position: absolute;
+  font-size: 20px;
+  right: 0;
+  top: 2px;
+  -webkit-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+}
+div.table_wrap a.moretime:hover {
+  opacity: 1;
+}
+
+div.table_wrap div.berserk_alert {
+  position: absolute;
+  right: 0;
+  top: -14px;
+  font-size: 34px;
+  color: #D85000;
+}
+div.table_wrap div.berserk_alert.bottom {
+  top: -3px;
+}
+div.table_wrap .tournament_rank {
+  position: absolute;
+  font-size: 20px;
+  right: 0;
+}
+div.table_wrap .tournament_rank.top {
+  top: 5px;
+}
+div.table_wrap .tournament_rank.bottom {
+  bottom: 5px;
+}
+div.table_next {
+  top: 145px;
+}
+div.separator {
+  margin: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+div.control {
+  text-align: center;
+  width: 100%;
+}
+div.control.icons {
+  margin-top: 5px;
+}
+div.control.icons .button {
+  font-size: 16px;
+  height: 34px;
+  padding: 0 10px;
+  margin: 0 3px;
+  background: #315c7f;
+  color: #FFF;
+}
+.button, a.button, .ui-slider-handle, .ui-widget-content{
+  /* background: #315c7f; */
+  color: #FFF;
+}
+ .ui-slider-handle, .ui-widget-content{
+  background: #FFF;
+  color: #FFF;
+}
+.board-buttons a.button{
+    background: #315c7f;
+    margin: 8px 0 5px 0;
+    text-align: center;
+}
+.board-buttons{
+  text-align: center;
+}
+.board-buttons a.button:hover{
+   background: #4760bb; /* CHANGE BUTTON COLOR */
+}
+div.control.icons .takeback-yes span:before {
+  display: inline-block;
+  transform: translateY(1px);
+  -webkit-transform: translateY(1px);
+}
+div.control.icons .draw-yes span:before {
+  display: inline-block;
+  transform: translateY(-1px) rotate(-90deg);
+  -webkit-transform: rotate(-90deg);
+}
+div.control.icons .resign span:before {
+  display: inline-block;
+  transform: translateY(1px);
+  -webkit-transform: translateY(1px);
+}
+div.control.icons .resign_confirm {
+  position: absolute;
+  z-index: 100;
+  width: 100%;
+  text-align: center;
+  margin-top: -39px;
+  margin-left: -10px;
+  background: url('../images/cmg-images/resign_bg.png');
+  height: 45px;
+}
+div.control.icons .resign_confirm .yes {
+  background: #dc322f;
+  color: #fff;
+}
+div.control.icons .resign_confirm .no {
+  position: absolute;
+  top: 0;
+  left: 39px;
+}
+div.control .button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.lichess_ground .suggestion,
+.lichess_ground .pending,
+.lichess_ground .negotiation {
+  margin: 7px -10px 0 -10px;
+  padding: 7px;
+  background: #4479a9;
+}
+.lichess_ground .suggestion{
+  padding-bottom: 15px;
+}
+.lichess_ground .suggestion p {
+  margin-bottom: 12px;
+}
+.lichess_ground .suggestion .button {
+  display: inline;
+  font-weight: normal;
+  padding: 3px 12px;
+  width: 103px;
+  border: 1px solid #ffffff;
+  background: #3d6f9c;
+  font-family: "Noto Sans","Lucida Grande","Lucida Sans Unicode",Geneva,Verdana,sans-serif;
+}
+.lichess_ground .suggestion .button:hover{
+  background: #2e5476;
+}
+.lichess_ground .suggestion a:first-child{
+  margin-right: 10px;
+  margin-left: 20px;
+}
+.lichess_ground .suggestion a:last-child{
+  margin-left:10px;
+  padding: 3px 22px;
+}
+.lichess_ground .pending {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  background: url("../images/cmg-images/rematch_bg.png");
+  height: 48px;
+  margin-top: 22px;
+  margin-left: -11px;
+  padding-left: 0;
+  width: 236px;
+}
+.lichess_ground .pending p {
+  /*flex: 3 1;*/
+  margin-right: 12px;
+  margin-left: 20px;
+}
+.lichess_ground .pending .button {
+  flex: 1 1;
+  background: url("../images/cmg-images/cancel.png");
+  width: 74px;
+  height: 26px;
+  font-size:0px;
+  border:0px;
+  padding: 0px;
+  background-repeat: no-repeat;
+}
+.lichess_ground .pending .button:hover {
+  background: url("../images/cmg-images/cancel_hover.png");
+  background-repeat: no-repeat;
+}
+.lichess_ground .negotiation {
+  display: flex;
+  align-items: center;
+  background: url("../images/cmg-images/negotiation_bg.png");
+  width:229px;
+  height:65px;
+  margin-top:5px;
+}
+.lichess_ground .negotiation p {
+  /*flex: 1 1 auto;*/
+  margin-right: 7px;
+  width:112px;
+}
+.lichess_ground .negotiation a {
+  flex: 0 0 50px;
+  height: 50px;
+  line-height: 44px;
+  font-size: 25px;
+  display: block;
+  background: #fff;
+}
+.lichess_ground .negotiation .accept {
+  color: #759900;
+  border-right: 1px solid #d0d0d0;
+  border-radius: 3px 0 0 3px;
+}
+.lichess_ground .negotiation .decline {
+  color: #dc322f;
+  border-radius: 0 3px 3px 0;
+}
+.lichess_ground .negotiation a:hover {
+  color: #fff;
+  background: #759900!important;
+}
+.lichess_ground .negotiation a.decline:hover {
+  background: #dc322f!important;
+}
+.lichess_ground .follow_up {
+  margin: 7px 0;
+}
+.lichess_ground .follow_up .button {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  border-bottom-width: 0;
+  border-radius: 0;
+  padding: 14px 0;
+  background: #f2f2f2;
+  color: #848484;
+}
+.variant_crazyhouse .lichess_ground .follow_up .button {
+  padding: 8px 0;
+}
+.lichess_ground .follow_up .button.strong {
+  margin-bottom: 7px;
+}
+.lichess_ground .follow_up .button:first-child {
+  background: url(../assets/images/rematch.png);
+  border: 0 none;
+  border-radius: 0;
+  font-size: 0;
+  height: 28px;
+  margin: 35px auto auto;
+  width: 148px;
+}
+.lichess_ground .follow_up .button:first-child :hover{
+  background: url(../assets/images/rematch_hover.png);
+  background-repeat: no-repeat;
+}
+.lichess_ground .follow_up .button:last-child {
+  border-bottom-width: 1px;
+  border-radius: 0 0 3px 3px;
+  display: none;
+}
+div.separator {
+  margin: 10px 0;
+  border-bottom: 1px solid #ddd;
+}
+div.current_player {
+  height: 64px;
+}
+div.current_player div.player {
+  position: absolute;
+  margin-left: -5px;
+}
+div.current_player div.no-square {
+  width: 64px;
+  height: 64px;
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+div.current_player div.player p {
+  height: 64px;
+  line-height: 64px;
+  font-size: 15px;
+  font-weight: bold;
+  color: #888;
+  margin: 0 0 0 64px;
+}
+div.table.finished div.player p {
+  line-height: 2em;
+  font-size: 12px;
+  margin-top: 12px;
+}
+div.cemetery {
+  /*flex: 0 0 32px;*/
+  line-height: 0;
+  white-space: nowrap;
+  line-height: 0;
+  margin-top:-29px;
+  color:#ffffff;
+  font-weight:bold;
+  /*border: 1px solid #325f87;
+  padding: 0 5px;
+  background-color: #1d384f;*/
+}
+div.cemetery:first-child {
+	margin-top:-85px;
+  /* margin-bottom: 5px; */
+}
+div.cemetery:last-child {
+  /* margin-top: 5px; */
+}
+div.cemetery tomb {
+  display: inline-block;
+  margin-left: 10px;
+}
+div.cemetery mono-piece {
+  margin-left: -10px;
+}
+div.cemetery score {
+  display: inline-block;
+  float: right;
+  font-family: 'Roboto';
+  font-weight: 300;
+  font-size: 15px;
+  line-height: 35px;
+  vertical-align: top;
+}
+div.under_chat {
+  width: 228px;
+  margin: 10px 0 0 -30px;
+}
+@media (max-width: 1070px) {
+  div.under_chat {
+    margin-left: 0;
+    width: 198px;
+  }
+}
+div.under_chat .watchtv {
+  display: block;
+  height: 24px;
+  line-height: 24px;
+  text-align: center;
+  margin-top: -24px;
+}
+div.under_chat .watchers {
+  margin-top: 25px;
+  opacity: 0.65;
+  transition: 0.13s;
+  height: 10em;
+  overflow: hidden;
+}
+div.under_chat .watchers:hover {
+  opacity: 1;
+}
+div.game_tournament {
+  max-height: 300px;
+  overflow: hidden;
+}
+div.game_tournament:hover {
+  overflow-y: auto;
+}
+div.game_tournament .clock {
+  text-align: center;
+  font-size: 20px;
+  font-family: monospace, 'Noto Sans', 'Lucida Grande';
+  font-weight: bold;
+  margin: 10px 0;
+}
+div.game_tournament table.standing {
+  border-bottom: none;
+}
+div.game_tournament table.standing tr.me td:first-child {
+  border-left: 10px solid #d59120;
+  padding-left: 5px;
+}
+div.game_tournament table.standing td {
+  padding: 0 10px;
+  text-align: left;
+  line-height: 2em;
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+div.game_tournament table.standing td.name span {
+  display: inline-block;
+  width: 20px;
+}
+div.game_tournament table.standing td.total {
+  text-align: right;
+}
+span.inline_userlist {
+  display: inline;
+  color: #9a9a9a;
+}
+span.inline_userlist a {
+  color: #aaa;
+  font-weight: bold;
+}
+div.underboard {
+  display: flex;
+}
+div.underboard .center {
+  position: relative;
+  text-align: center;
+  padding-top: 15px;
+  width: 512px;
+}
+div.underboard .center .crosstable_placeholder {
+  /* prevent crosstable FOUC */
+  min-height: 81px;
+}
+div.underboard .blurs,
+div.underboard .right {
+  padding-left: 15px;
+  width: 242px;
+}
+div.underboard .blurs {
+  position: relative;
+  padding-top: 25px;
+  z-index: 1;
+}
+div.underboard a {
+  display: inline-block;
+}
+#backtohmPop{
+  display:none
+}
+#backtohomeBtn{
+  text-align: center;
+}
+#backtohomeBtn>button{
+  font-size: 0px;
+  background-image: url('../assets/images/back-to-chess-home.png');
+  width:148px;
+  height:28px;
+  border:0px;
+  margin-top:30px;
+  margin-bottom:58px;
+}
+#backtohomeBtn>button:hover{
+  background-image: url('../assets/images/back-to-chess-home-hover.png');
+}
+#backtohmPop{
+  background: #4579a9;
+  text-align: center;
+  padding:14px;
+  margin-left: -10px;
+  margin-right: -10px;
+  margin-top:14px;
+}
+.abort{
+  font-size: 0px;
+  background-image: url('../assets/images/leave-game.png');
+  width:96px;
+  height:26px;
+  border:0px;
+  display: inline-block;
+  margin-top: 10px;
+  margin-right: 10px;
+}
+.abort:hover{
+  background-image: url('../assets/images/leave-game-hover.png');
+}
+.keepplaying{
+  font-size: 0px;
+  background-image: url('../assets/images/keep-playing.png');
+  width:103px;
+  height:26px;
+  border:0px;
+  display: inline-block;
+  margin-top: 10px;
+  vertical-align:top;
+}
+.keepplaying:hover{
+  background-image: url('../assets/images/keep-playing-hover.png');
+}
+#lichess .top.lobby .clock_top, #lichess .top.ai .table_wrap.withTimer .clock_top, #lichess .top.friend .table_wrap.withTimer .clock_top{
+  display: inline-block;
+  margin-top: -3px;
+  border: 1px solid #fff;
+  margin-left: 6px;
+  margin-bottom: 0px;
+}
+#lichess .top.lobby .clock_bottom, #lichess .top.ai .table_wrap.withTimer .clock_bottom, #lichess .top.friend .table_wrap.withTimer .clock_bottom{
+  border: 1px solid #fff;
+}
+#lichess .top.lobby .table_wrap{
+  display: inline-block;
+  background-image: url('../images/cmg-images/random_top_bg.png');
+  background-repeat: no-repeat;
+  background-position: -4px -3px;
+}
+#lichess .top.friend .table_wrap, #lichess .top.ai .table_wrap{
+  display: inline-block;
+  background-image: url('../images/cmg-images/random_top_bg.png');
+  background-repeat: no-repeat;
+  background-position: -4px -3px;
+}
+#lichess .top.lobby .table_wrap .whos_turn, #lichess .top.ai .table_wrap.withTimer .whos_turn, #lichess .top.friend .table_wrap.withTimer .whos_turn{
+  width: 140px;
+  display: inline;
+  text-align:left;
+  font-size: 11px;
+  vertical-align: text-top;
+  margin-left:4px;
+}
+#lichess .top.friend .table_wrap .position_top, #lichess .top.ai .table_wrap .position_top{
+  padding-top:5px;
+}
+#lichess .top.friend .table_wrap .position_bottom, #lichess .top.ai .table_wrap .position_bottom{
+  padding-top:0px;
+}
+#lichess .top.lobby .table_wrap .table{
+  margin-top: 7px;
+}
+#lichess .top.friend .table_wrap .table, #lichess .top.ai .table_wrap .table{
+  margin-top: 14px;
+  padding-top: 0px;
+}
+#lichess .top .table_wrap .moretime{
+  display: none;
+}
+#lichess .top.lobby .table_wrap{
+  height: 500px;
+}
+#lichess .top.lobby .lichess_ground .replay .status, #lichess .top.ai .lichess_ground .table_wrap.withTimer .replay .status, #lichess .top.friend .lichess_ground .table_wrap.withTimer .replay .status{
+  margin: -13px 0 -5px -14px;
+}
+div.control.icons.resign_confirm{
+  display: block;
+  margin-top: 10px;
+}
+.resign_confirm button{
+  border: 0 none;
+  height: 28px;
+  width: 100 px;
+  margin-top:8px;
+}
+.resign_confirm .cmg-resign{
+  background-image: url("../images/cmg-images/resign.png");
+  margin-right: 5px;
+  width: 96px;
+  height:26px;
+}
+.resign_confirm .cmg-resign:hover{
+  background-image: url("../images/cmg-images/resign_hover.png");
+}
+.resign_confirm .cmg-keep-playing{
+ background-image: url("../images/cmg-images/keep-playing.png");
+ width: 103px;
+ height: 26px;
+}
+.resign_confirm .cmg-keep-playing:hover{
+ background-image: url("../images/cmg-images/keep-playing-hover.png");
+}
+#backandrematch #rematch{
+  width: 100%;
+  text-align: center;
+}
+#rematch .button{
+  background-image: url("../images/cmg-images/rematch.png");
+  width: 148px;
+  height: 28px;
+  display: block;
+  padding: 0px;
+  font-size: 0px;
+  border: 0px;
+  margin-left: 37px;
+  margin-top: 30px;
+  border-radius: 0px;
+}
+#rematch .button:hover{
+  background-image: url("../images/cmg-images/rematch_hover.png");
+}
+.is3d div.lichess_game{
+  height: 512px !important;
+}
+#lichess .top.lobby .lichess_ground #backandrematch #rematch .button, #lichess .top.friend .lichess_ground #backandrematch #rematch .button{
+  display: none;
+}
+div.cemetery, div.cemetery.bottom, div.cemetery.top{
+  background-color: #7aa6c8;
+  border: 1px solid #4f80a2;
+  height: 37px;
+  display:none;
+}
+div.cemetery.top{
+  border-bottom: 1px solid #ffffff;
+  width:100%;
+  position: relative;
+  z-index: 2;
+}
+div.cemetery.bottom{
+  position: absolute;
+  bottom: -17px;
+  border-top: 1px solid #ffffff;
+  width:inherit;
+  height:36px;
+}
+#lichess .top.friend .lichess_ground .follow_up .button:last-child {
+  display: block !important;
+}
+div.lichess_ground {
+  margin-top: 0px !important;
+}

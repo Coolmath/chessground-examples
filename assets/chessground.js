@@ -43,7 +43,7 @@ function setupGame(aiLevel, color) {
   setAILevel(aiLevel);
   setPlayerColor(color);
   isGameAlreadySetup = true;
-  
+
   checkGameReadyForStart();
 }
 
@@ -6057,7 +6057,7 @@ var ChessgroundExamples = (function (exports) {
         turnColor: state.turnColor,
         viewOnly: state.viewOnly
       };
-      
+
       // restore previous role for the promoted pieces (basucally useful only for proper rendering as the logis restores by other code)
       for (let value of storedState.pieces.values()) {
         if (value.roleBeforePromotion) {
@@ -6084,7 +6084,7 @@ var ChessgroundExamples = (function (exports) {
 
     window.actualStoredState = null;
     window.storeActualState = function() {
-      window.actualStoredState = cloneCurrentState();      
+      window.actualStoredState = cloneCurrentState();
     };
     window.revertActualState = function() {
       window.currentRenderedStateIndex = window['-sotredStates-'].length;
@@ -6099,7 +6099,7 @@ var ChessgroundExamples = (function (exports) {
       if (window.currentRenderedStateIndex != window['-sotredStates-'].length) return;
       let lastState = window['-sotredStates-'].pop();
       window.currentRenderedStateIndex = window['-sotredStates-'].length;
-      
+
       const state = window.state;
       state.lastMove = lastState.lastMove;
       state.movable.color = lastState.movable.color;
@@ -6131,7 +6131,7 @@ var ChessgroundExamples = (function (exports) {
       RND_COUNT = 1;
     };
 
-    window.renderStoryState = function(_state, isActual) {  
+    window.renderStoryState = function(_state, isActual) {
       if (isActual === undefined) isActual = false;
 
       const state = window.state;
@@ -6146,14 +6146,14 @@ var ChessgroundExamples = (function (exports) {
 
       state.selectable = {enabled: isActual};
       state.viewOnly = !isActual;
-      
+
       redrawAll();
 
       window.renderStoryStatesList();
       window.updateStoryButtonStates();
     };
 
-    
+
     function setEnabled(button, glowed) {
       if (button.classList.contains("disabled")) {
         button.classList.remove("button", "disabled");
@@ -6163,7 +6163,7 @@ var ChessgroundExamples = (function (exports) {
       } else {
         button.classList.add("button");
       }
-      
+
       button.style.pointerEvents = '';
     }
     function setDisabled(button, glowed) {
@@ -6174,16 +6174,16 @@ var ChessgroundExamples = (function (exports) {
       } else {
         if (button.classList.contains("button")) {
           button.classList.remove("button");
-        }  
+        }
       }
-      
+
       button.classList.add("button", "disabled");
 
       button.style.pointerEvents = 'none';
     }
 
     window.updateStoryButtonStates = function() {
-      
+
       setEnabled(buttonFirstStoryState);
       setEnabled(buttonPrevStoryState);
       setEnabled(buttonNextStoryState);
@@ -6197,7 +6197,7 @@ var ChessgroundExamples = (function (exports) {
         setDisabled(buttonNextStoryState);
         setDisabled(buttonActualStoryState, true);
       }
-      
+
       var butonRematch = document.getElementById("buton-rematch");
       if (window.currentRenderedStateIndex == window['-sotredStates-'].length && window.currentRenderedStateIndex > 0) {
         setEnabled(buttonTakeback);
@@ -6222,7 +6222,7 @@ var ChessgroundExamples = (function (exports) {
     window.prevStoryState = function() {
       if (window['-sotredStates-'].length === 0) return;
       if (window.currentRenderedStateIndex <= 0) return;
-      
+
       window.currentRenderedStateIndex--;
 
       renderCurrentStoryState();
@@ -6263,7 +6263,7 @@ var ChessgroundExamples = (function (exports) {
       const sotredStates = window['-sotredStates-'].slice();
       sotredStates.push(window.actualStoredState);
       let innerHTML = ``;
-      for (let i = 1; i < sotredStates.length; i++) {        
+      for (let i = 1; i < sotredStates.length; i++) {
         let index = Math.floor(i / 2) + 1;
         if (i % 2 == 1) {
           innerHTML += `
@@ -6477,7 +6477,7 @@ var ChessgroundExamples = (function (exports) {
                 //allow player to interact
                 window.state.viewOnly = false;
                 setEnabled(buttonFlip, false);
-                
+
                 redrawAll();
 
                 setTimeout(()=>{
@@ -6509,7 +6509,7 @@ var ChessgroundExamples = (function (exports) {
 
             let _proceed = ()=>{
               _proceedPlayerMove(orig, dest, promotionPiece);
-              _proceedAIMove();              
+              _proceedAIMove();
             };
 
             //check if the player makes a promo, and if yes then show UI for selection of a newly generated pawn
@@ -6639,14 +6639,14 @@ function createRematchButton() {
     hideWinnerMessage();
 
     while (window['-sotredStates-'].length > 0) {
-      window.undoLastStoredState();      
+      window.undoLastStoredState();
       window.undoLastStoredState();
     }
     window.doGameReset();
   });
 }
 
-function removeAllTheUnneededUI() {  
+function removeAllTheUnneededUI() {
   var div_play_vs_ai = document.getElementById('play-vs-ai');
   var lichess_ground = document.getElementsByClassName('lichess_ground')[0]
   div_play_vs_ai.appendChild(lichess_ground);
@@ -6676,7 +6676,7 @@ function setupBackToHomeButton() {
   backandrematch.appendChild(backtohmPop);
 
   function doBackToHomeAction() {
-    window.location = "https://www.coolmathgames.com/0-chess";
+    window.location = "/";
   }
 
   var buttonAbort = document.getElementsByClassName('button hint--bottom abort')[0];
@@ -6689,7 +6689,7 @@ function setupBackToHomeButton() {
     backtohomeBtn.style.display = 'block';
     backtohmPop.style.display = 'none';
   });
-  
+
   backtohomeBtn.addEventListener("click", function (event) {
     if (window.isWinnerMessageVisible) {
       doBackToHomeAction();
@@ -6708,11 +6708,11 @@ window.addEventListener('load', function() {
   buttonTakeback.onclick = function() {
     const sotredStates = window['-sotredStates-'];
     if (sotredStates.length === 0) return;
-    
+
     let lastState = sotredStates[sotredStates.length - 1];
-    if ( (lastState.turnColor === "black" && playerColor === "white") 
+    if ( (lastState.turnColor === "black" && playerColor === "white")
       || (lastState.turnColor === "white" && playerColor === "black")) {
-      window.undoLastStoredState();      
+      window.undoLastStoredState();
       window.undoLastStoredState();
 
       hideWinnerMessage();
@@ -6747,6 +6747,6 @@ window.addEventListener('load', function() {
 
   //clear the story list
   window.renderStoryStatesList();
-  //disable the story nav buttons  
+  //disable the story nav buttons
   window.updateStoryButtonStates();
 });

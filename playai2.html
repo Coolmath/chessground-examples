@@ -1,0 +1,53 @@
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <link rel="stylesheet" href="assets/chessground.css">
+    
+    <link href='//fonts.googleapis.com/css?family=Noto+Sans:400,700|Roboto:300' rel='stylesheet' type='text/css'>
+    
+    <link href="assets/common.css" type="text/css" rel="stylesheet"/>
+    <link href="assets/board.css" type="text/css" rel="stylesheet"/>
+    
+    <link id="piece-sprite" href="assets/alpha.css" type="text/css" rel="stylesheet"/>
+
+  </head>
+  <body>    
+    <script src="assets/jquery.min.js"></script>    
+    <script src="assets/ui.js"></script>
+
+    <script>
+      $(function() {
+      lichess.startRound(document.getElementById('lichess'), {
+          data: { "game": { "id": "w90v6IFY", "variant": { "key": "standard", "name": "Standard", "short": "Std", "title": "Standard rules of chess (FIDE)" }, "speed": "classical", "perf": "classical", "rated": false, "initialFen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1", "fen": "rnbqkbnr/ppppppp1/8/7p/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 2", "player": "white", "turns": 2, "startedAtTurn": 0, "lastMove": "h7h5", "threefold": false, "source": "friend", "status": { "id": 20, "name": "started" }, "createdAt": 1702394339468 }, "clock": { "running": true, "initial": 300, "increment": 8, "white": 240.75, "black": 300, "emerg": 37, "moretime": 15 }, "player": { "id": "3Yay", "color": "black", "version": 2, "spectator": false, "onGame": true }, "opponent": { "color": "white", "onGame": true, "isGone": false }, "url": { "socket": "/w90v6IFY3Yay/socket/v1", "round": "/w90v6IFY3Yay" }, "pref": { "blindfold": false, "animationDuration": 300, "highlight": true, "destination": true, "coords": 2, "replay": 2, "autoQueen": 2, "clockTenths": 1, "clockBar": true, "clockSound": true, "enablePremove": true, "showCaptured": true, "submitMove": false, "confirmResign": true }, "takebackable": true, "steps": [{ "ply": 0, "uci": null, "san": null, "fen": "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" }, { "ply": 1, "uci": "a2a4", "san": "a4", "fen": "rnbqkbnr/pppppppp/8/8/P7/8/1PPPPPPP/RNBQKBNR b KQkq - 0 1" }, { "ply": 2, "uci": "h7h5", "san": "h5", "fen": "rnbqkbnr/ppppppp1/8/7p/P7/8/1PPPPPPP/RNBQKBNR w KQkq - 0 2" }] },
+          i18n: { "flipBoard": "Flip board", "premoveEnabledClickAnywhereToCancel": "Premove enabled - Click anywhere to cancel", "aiNameLevelAiLevel": "%s level %s", "yourTurn": "Your Turn", "abortGame": "Abort game", "proposeATakeback": "Takeback", "offerDraw": "Offer draw", "resign": "Resign", "theOtherPlayerHasLeftTheGameYouCanForceResignationOrWaitForHim": "The other player may have left the game. You can claim victory, call the game a draw, or wait.", "forceResignation": "Claim victory", "forceDraw": "Call draw", "threefoldRepetition": "Threefold repetition", "claimADraw": "Claim a draw", "drawOfferSent": "Draw offer sent", "cancel": "Cancel this Game", "yourOpponentOffersADraw": "Your opponent offers a draw", "accept": "Accept", "decline": "Decline", "takebackPropositionSent": "Takeback offer sent", "yourOpponentProposesATakeback": "Your opponent proposes a takeback", "youHaveNbSecondsToMakeYourFirstMove": "You have %s seconds to make your first move!", "thisPlayerUsesChessComputerAssistance": "This player uses chess computer assistance", "gameAborted": "Game aborted", "checkmate": "CHECKMATE", "whiteResigned": "White resigned", "blackResigned": "Black resigned", "stalemate": "Stalemate", "whiteLeftTheGame": "White left the game", "blackLeftTheGame": "Black left the game", "draw": "Draw", "timeOut": "Time out", "playingRightNow": "Playing right now", "whiteIsVictorious": "White Wins!", "blackIsVictorious": "Black Wins!", "kingInTheCenter": "King in the center", "threeChecks": "Three checks", "variantEnding": "Variant ending", "backToTournament": "Return to tournament", "withdraw": "Withdraw", "joinTheGame": "Join the game", "declineInvitation": "Decline invitation", "rematch": "Rematch", "rematchOfferSent": "Rematch offer sent", "rematchOfferAccepted": "Rematch offer accepted", "waitingForOpponent": "Opponent's Turn", "cancelRematchOffer": "Cancel rematch offer", "newOpponent": "New opponent", "moveConfirmation": "Move confirmation", "viewRematch": "View rematch", "viewTournament": "View tournament", "whitePlays": "White to play", "blackPlays": "Black to play", "giveNbSeconds": "Give %s seconds", "gameOver": "Game Over", "analysis": "Analysis board", "yourOpponentWantsToPlayANewGameWithYou": "Your opponent wants to play a new game with you", "oneDay": "One day", "nbDays": "%s days", "nbHours": "%s hours" },
+        });
+      });
+      
+    </script>
+
+    <div id="play-vs-ai"></div>
+    <script src="assets/chessground.js"></script>
+    <script src="assets/lib/garbochess.js"></script>
+    <script>
+      //ChessgroundExamples.run(document.getElementById('play-vs-ai'));
+      AI_LEVEL = parseInt(getUrlParameter('AI_LEVEL')) ?? 1;
+      playerColor = getUrlParameter('PLAYER_COLOR') ?? 'white';//'white' or 'black'
+      var rand_num = Math.random();
+      if(playerColor == "random" && rand_num <= 0.5) {
+	      playerColor = "white";
+	      
+      } else if(playerColor =="random" && rand_num > 0.5){
+	      playerColor = "black";
+      }
+      console.log("playerColor :" + playerColor);
+      setupGame(AI_LEVEL, playerColor);
+    </script>
+
+    <div class="content is2d" style="display: none;">
+      <div id="lichess">
+        <div class="round cg-512"></div>
+      </div>
+    </div>
+
+  </body>
+</html>
