@@ -43,7 +43,7 @@ function setupGame(aiLevel, color) {
   setAILevel(aiLevel);
   setPlayerColor(color);
   isGameAlreadySetup = true;
-
+  
   checkGameReadyForStart();
 }
 
@@ -2083,6 +2083,9 @@ var ChessgroundExamples = (function (exports) {
       a1: 112, b1: 113, c1: 114, d1: 115, e1: 116, f1: 117, g1: 118, h1: 119
     };
 
+    const SQUARE_MAP_REVERSE = {};
+    for (let key in SQUARE_MAP) SQUARE_MAP_REVERSE[SQUARE_MAP[key]] = key
+
     const ROOKS = {
       w: [
         { square: SQUARE_MAP.a1, flag: BITS.QSIDE_CASTLE },
@@ -2261,7 +2264,7 @@ var ChessgroundExamples = (function (exports) {
       var kings = { w: EMPTY, b: EMPTY };
       window.turn = WHITE;
       var castling = { w: 0, b: 0 };
-      var ep_square = EMPTY;
+      window.ep_square = EMPTY;
       var half_moves = 0;
       var move_number = 1;
       var history = [];
@@ -3831,6 +3834,12 @@ var ChessgroundExamples = (function (exports) {
            * move is made
            */
           var pretty_move = make_pretty(move_obj);
+
+          //fix - En passant does not work
+          if (move_obj.flags & BITS.EP_CAPTURE) {
+            let _index = move_obj.to + (turn === BLACK ? -16 : 16);
+            if (ep_square === move_obj.to) state.pieces.delete(SQUARE_MAP_REVERSE[_index]);
+          }
 
           make_move(move_obj);
 
@@ -6057,7 +6066,7 @@ var ChessgroundExamples = (function (exports) {
         turnColor: state.turnColor,
         viewOnly: state.viewOnly
       };
-
+      
       // restore previous role for the promoted pieces (basucally useful only for proper rendering as the logis restores by other code)
       for (let value of storedState.pieces.values()) {
         if (value.roleBeforePromotion) {
@@ -6084,7 +6093,7 @@ var ChessgroundExamples = (function (exports) {
 
     window.actualStoredState = null;
     window.storeActualState = function() {
-      window.actualStoredState = cloneCurrentState();
+      window.actualStoredState = cloneCurrentState();      
     };
     window.revertActualState = function() {
       window.currentRenderedStateIndex = window['-sotredStates-'].length;
@@ -6099,7 +6108,7 @@ var ChessgroundExamples = (function (exports) {
       if (window.currentRenderedStateIndex != window['-sotredStates-'].length) return;
       let lastState = window['-sotredStates-'].pop();
       window.currentRenderedStateIndex = window['-sotredStates-'].length;
-
+      
       const state = window.state;
       state.lastMove = lastState.lastMove;
       state.movable.color = lastState.movable.color;
@@ -6131,7 +6140,7 @@ var ChessgroundExamples = (function (exports) {
       RND_COUNT = 1;
     };
 
-    window.renderStoryState = function(_state, isActual) {
+    window.renderStoryState = function(_state, isActual) {  
       if (isActual === undefined) isActual = false;
 
       const state = window.state;
@@ -6146,14 +6155,14 @@ var ChessgroundExamples = (function (exports) {
 
       state.selectable = {enabled: isActual};
       state.viewOnly = !isActual;
-
+      
       redrawAll();
 
       window.renderStoryStatesList();
       window.updateStoryButtonStates();
     };
 
-
+    
     function setEnabled(button, glowed) {
       if (button.classList.contains("disabled")) {
         button.classList.remove("button", "disabled");
@@ -6163,7 +6172,7 @@ var ChessgroundExamples = (function (exports) {
       } else {
         button.classList.add("button");
       }
-
+      
       button.style.pointerEvents = '';
     }
     function setDisabled(button, glowed) {
@@ -6174,16 +6183,16 @@ var ChessgroundExamples = (function (exports) {
       } else {
         if (button.classList.contains("button")) {
           button.classList.remove("button");
-        }
+        }  
       }
-
+      
       button.classList.add("button", "disabled");
 
       button.style.pointerEvents = 'none';
     }
 
     window.updateStoryButtonStates = function() {
-
+      
       setEnabled(buttonFirstStoryState);
       setEnabled(buttonPrevStoryState);
       setEnabled(buttonNextStoryState);
@@ -6197,7 +6206,7 @@ var ChessgroundExamples = (function (exports) {
         setDisabled(buttonNextStoryState);
         setDisabled(buttonActualStoryState, true);
       }
-
+      
       var butonRematch = document.getElementById("buton-rematch");
       if (window.currentRenderedStateIndex == window['-sotredStates-'].length && window.currentRenderedStateIndex > 0) {
         setEnabled(buttonTakeback);
@@ -6222,7 +6231,7 @@ var ChessgroundExamples = (function (exports) {
     window.prevStoryState = function() {
       if (window['-sotredStates-'].length === 0) return;
       if (window.currentRenderedStateIndex <= 0) return;
-
+      
       window.currentRenderedStateIndex--;
 
       renderCurrentStoryState();
@@ -6263,7 +6272,7 @@ var ChessgroundExamples = (function (exports) {
       const sotredStates = window['-sotredStates-'].slice();
       sotredStates.push(window.actualStoredState);
       let innerHTML = ``;
-      for (let i = 1; i < sotredStates.length; i++) {
+      for (let i = 1; i < sotredStates.length; i++) {        
         let index = Math.floor(i / 2) + 1;
         if (i % 2 == 1) {
           innerHTML += `
@@ -6327,7 +6336,7 @@ var ChessgroundExamples = (function (exports) {
         // console.log('SAN PLAYER: ', __move.san);
       })();
 
-      chess.move(_move);
+      chess.move(__move.san);
       window.storeActualState();
 
       //prevent player interaction while AI is 'thinking'
@@ -6477,7 +6486,7 @@ var ChessgroundExamples = (function (exports) {
                 //allow player to interact
                 window.state.viewOnly = false;
                 setEnabled(buttonFlip, false);
-
+                
                 redrawAll();
 
                 setTimeout(()=>{
@@ -6509,7 +6518,7 @@ var ChessgroundExamples = (function (exports) {
 
             let _proceed = ()=>{
               _proceedPlayerMove(orig, dest, promotionPiece);
-              _proceedAIMove();
+              _proceedAIMove();              
             };
 
             //check if the player makes a promo, and if yes then show UI for selection of a newly generated pawn
@@ -6639,14 +6648,14 @@ function createRematchButton() {
     hideWinnerMessage();
 
     while (window['-sotredStates-'].length > 0) {
-      window.undoLastStoredState();
+      window.undoLastStoredState();      
       window.undoLastStoredState();
     }
     window.doGameReset();
   });
 }
 
-function removeAllTheUnneededUI() {
+function removeAllTheUnneededUI() {  
   var div_play_vs_ai = document.getElementById('play-vs-ai');
   var lichess_ground = document.getElementsByClassName('lichess_ground')[0]
   div_play_vs_ai.appendChild(lichess_ground);
