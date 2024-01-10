@@ -6132,6 +6132,7 @@ var ChessgroundExamples = (function (exports) {
 
       storeActualState();
       window.actualStoredState.san = lastState.san;
+      window.previouslyStoredSan = window.actualStoredState.san;
 
       window.renderStoryStatesList();
       window.updateStoryButtonStates();
