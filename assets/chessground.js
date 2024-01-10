@@ -64,6 +64,9 @@ function checkGameReadyForStart() {
   }
 }
 
+const BOARD_WIDHT = 520;
+const BOARD_HEIGHT = 520;
+
 let MOVES_NUM = 1;
 let RND_COUNT = 1;
 var ChessgroundExamples = (function (exports) {
@@ -5471,8 +5474,8 @@ var ChessgroundExamples = (function (exports) {
       pawnPromotionUICanvas = document.createElement('canvas');
 
       pawnPromotionUICanvas.id = "pawnPromotionUI";
-      pawnPromotionUICanvas.width = 480;
-      pawnPromotionUICanvas.height = 480;
+      pawnPromotionUICanvas.width = BOARD_WIDHT;
+      pawnPromotionUICanvas.height = BOARD_HEIGHT;
       pawnPromotionUICanvas.style.zIndex = -1;
       pawnPromotionUICanvas.style.position = "absolute";
 
@@ -5483,7 +5486,7 @@ var ChessgroundExamples = (function (exports) {
 
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.fillStyle = prefix === "b" ? 'rgba(255,255,255,0.75)' : 'rgba(0,0,0,0.75)';
-      ctx.rect(0, 0, 480, 480);
+      ctx.rect(0, 0, BOARD_WIDHT, BOARD_HEIGHT);
       ctx.fill();
 
       function createPiece(name, x, y) {
@@ -5499,10 +5502,10 @@ var ChessgroundExamples = (function (exports) {
         image.src = "assets/images/pieces/merida/" + name + ".svg";
         return image;
       }
-      const queen = createPiece(prefix+'Q', 55, 55);
-      const rock = createPiece(prefix+'R', 280, 55);
-      const bishop = createPiece(prefix+'B', 55, 250);
-      const knight = createPiece(prefix+'N', 280, 250);
+      const queen = createPiece(prefix+'Q', 75, 75);
+      const rock = createPiece(prefix+'R', 300, 75);
+      const bishop = createPiece(prefix+'B', 75, 270);
+      const knight = createPiece(prefix+'N', 300, 270);
 
       pawnPromotionUICanvas.addEventListener("click", function (event) {
         const x = event.offsetX;
@@ -5553,27 +5556,27 @@ var ChessgroundExamples = (function (exports) {
 
       let message = youWin ? "YOU WIN!" : "COMPUTER WINS!";
       let size = youWin ? 60 : 40;
-      let x = youWin ? 101 : 62;
+      let x = youWin ? 121 : 82;
 
       if (!g_inCheck) {//stalemate
         message = "STALEMATE!";
         size = 60;
-        x = 60;
+        x = 80;
       }
 
       const ctx = pawnPromotionUICanvas.getContext("2d");
       ctx.clearRect(0, 0, pawnPromotionUICanvas.width, pawnPromotionUICanvas.height);
 
       ctx.fillStyle = 'rgba(0,0,0,0.6)';
-      ctx.rect(0, 0, 480, 480);
+      ctx.rect(0, 0, BOARD_WIDHT, BOARD_HEIGHT);
       ctx.fill();
 
       ctx.font = size + "px Arial";
 
       ctx.fillStyle = "#000000";
-      ctx.fillText(message, x, 255);
+      ctx.fillText(message, x, 275);
       ctx.strokeStyle = "#FFFFFF";
-      ctx.strokeText(message, x, 255);
+      ctx.strokeText(message, x, 275);
 
       //let's also show default UI
       showCheckmateLabel(state.turnColor === 'black');
@@ -5860,6 +5863,9 @@ var ChessgroundExamples = (function (exports) {
             document.documentElement.style.setProperty('--cg-width', width + 'px');
             document.documentElement.style.setProperty('--cg-height', height + 'px');
         }
+
+        var div = document.querySelector("#play-vs-ai > section > div");
+        if (div) div.style.cssText = 'width: '+BOARD_WIDHT+'px; height: '+BOARD_HEIGHT+'px;';
     }
     function isPieceNode(el) {
         return el.tagName === 'PIECE';
@@ -6672,7 +6678,7 @@ function removeAllTheUnneededUI() {
   }
 
   //fix alignment at the bottom of the blue banner on the right
-  document.getElementsByClassName('table_wrap')[0].style.height = '468px';
+  document.getElementsByClassName('table_wrap')[0].style.height = '509px';
 
   setupBackToHomeButton();
 }
